@@ -6,5 +6,5 @@
 logs/
 target/
 .idea/
-node_modules
+kinesis/build/integration-tests/scripts/node_modules/
 package-lock.json

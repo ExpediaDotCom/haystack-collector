@@ -3,11 +3,11 @@ services:
    zookeeper:
      image: wurstmeister/zookeeper
      ports:
-       - "2181:2181"
+       - "2181"
    kafkasvc:
      image: wurstmeister/kafka:0.10.2.1
      ports:
-       - "9092:9092"
+       - "9092"
      depends_on:
        - zookeeper
      links:
@@ -21,9 +21,9 @@ services:
    kinesis:
      image: dlsniper/kinesalite
      ports:
-       - "4567:4567"
+       - "4567"
    dynamo:
      image: tray/dynamodb-local
      ports:
-       - "8088:8000"
+       - "8000"
      command: "-sharedDb"

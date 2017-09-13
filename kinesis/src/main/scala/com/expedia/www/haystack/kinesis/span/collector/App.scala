@@ -39,6 +39,7 @@ object App extends MetricsSupport {
     } catch {
       case ex: Exception =>
         LOGGER.error("Observed fatal exception while running the app", ex)
+        if(pipeline != null) pipeline.close()
         System.exit(1)
     }
   }

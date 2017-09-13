@@ -17,7 +17,10 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.integration.tests
 
+import com.expedia.open.tracing.{Batch, Span}
 import com.expedia.www.haystack.kinesis.span.collector.integration._
+
+import scala.concurrent.duration._
 
 class KinesisSpanCollectorSpec extends IntegrationTestSpec {
 
@@ -28,42 +31,36 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
     "connect with kinesis and kafka" in {
 
       Given("a valid span")
-      val span = null
+      val span = Span.newBuilder().setTraceId("traceid").setSpanId("span-id-1").build()
+      val spanBatchBytes = Batch.newBuilder().addSpans(span).build().toByteArray
 
       When("the span is sent to kinesis")
-      produceRecordsToKinesis(List(span, span))
+      produceRecordsToKinesis(List(spanBatchBytes, spanBatchBytes))
 
       Then("it should be pushed to kafka")
-      readRecordsFromKafka.headOption
+      readRecordsFromKafka(0, 1.second).headOption
     }
 
     "read valid messages from kinesis and store in kafka" in {
 
       Given("a valid span")
-      val span = null
+      val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").build()
+      val span_2 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-2").build()
+      val spanBatch_1 = Batch.newBuilder().addSpans(span_1).addSpans(span_2).build().toByteArray
+
+      val span_3 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-3").build()
+      val span_4 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-4").build()
+      val spanBatch_2 = Batch.newBuilder().addSpans(span_3).addSpans(span_4).build().toByteArray
 
       When("the span is sent to kinesis")
-      produceRecordsToKinesis(List(span, span))
+      produceRecordsToKinesis(List(spanBatch_1, spanBatch_2))
 
       Then("it should be pushed to kafka")
-      val record = readRecordsFromKafka.headOption
-      record should not be empty
-      record.get shouldEqual span
-    }
-
-    "should not validate span messages" in {
-
-      Given("an invalid span")
-      val invalidSpan = null
-
-      When("the span is sent to kinesis")
-      produceRecordsToKinesis(List(invalidSpan))
-
-      Then("it should be pushed to kafka")
-      val record = readRecordsFromKafka.headOption
-      record should not be empty
-      record.get shouldEqual invalidSpan
+      val records = readRecordsFromKafka(4, 5.seconds)
+      records should not be empty
+      val spans = records.map(Span.parseFrom)
+      spans.map(_.getTraceId).toSet should contain allOf("trace-id-1", "trace-id-2")
+      spans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
     }
   }
-
 }

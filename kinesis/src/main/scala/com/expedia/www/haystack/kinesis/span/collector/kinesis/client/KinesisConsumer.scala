@@ -29,8 +29,6 @@ import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanE
 import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
 import org.slf4j.LoggerFactory
 
-import scala.util.Try
-
 class KinesisConsumer(config: KinesisConsumerConfiguration,
                       sink: RecordSink) extends AutoCloseable {
   private val LOGGER = LoggerFactory.getLogger(classOf[KinesisConsumer])
@@ -39,15 +37,11 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
 
   // this is a blocking call
   def startWorker(): Unit = {
-    try {
-      worker = buildWorker(createProcessorFactory())
-      // the run method will block this thread, process loop will start now..
-      worker.run()
-    } catch {
-      case ex: Exception =>
-        LOGGER.error("Kinesis worker is crashing down with reason", ex)
-        Try(sink.close())
-    }
+    worker = buildWorker(createProcessorFactory())
+
+    LOGGER.info("Starting the kinesis worker now.")
+    // the run method will block this thread, process loop will start now..
+    worker.run()
   }
 
   private def createProcessorFactory() = {
@@ -82,6 +76,8 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
       .withMetricsLevel(config.metricsLevel)
       .withMetricsBufferTimeMillis(config.metricsBufferTime.toMillis)
       .withRegionName(region.getName)
+      .withTableName(config.dynamoTableName.getOrElse(config.appGroupName))
+      .withTaskBackoffTimeMillis(config.taskBackoffTime.toMillis)
 
     config.dynamoEndpoint.map(kinesisClientConfig.withDynamoDBEndpoint)
     config.kinesisEndpoint.map(kinesisClientConfig.withKinesisEndpoint)
