@@ -19,12 +19,15 @@ package com.expedia.www.haystack.kinesis.span.collector.integration
 
 import java.util.Properties
 
+import com.expedia.www.haystack.kinesis.span.collector.integration.config.TestConfiguration
 import org.apache.kafka.clients.consumer.internals.NoOpConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.collection.mutable
+import scala.concurrent.duration._
 
 trait LocalKafkaConsumer {
 
@@ -36,9 +39,34 @@ trait LocalKafkaConsumer {
     consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[ByteArrayDeserializer].getCanonicalName)
     new KafkaConsumer[Array[Byte], Array[Byte]](consumerProperties)
   }
+
   kafkaConsumer.subscribe(List(TestConfiguration.kafkaStreamName).asJava, new NoOpConsumerRebalanceListener())
 
-  def readRecordsFromKafka: List[Array[Byte]] = {
-    kafkaConsumer.poll(15000).records(TestConfiguration.kafkaStreamName).map(_.value()).toList
+  def readRecordsFromKafka(minExpectedCount: Int, maxWait: FiniteDuration): List[Array[Byte]] = {
+    val records = mutable.ListBuffer[Array[Byte]]()
+    var received: Int = 0
+
+    var waitTimeLeft = maxWait.toMillis
+    var done = true
+    while (done) {
+      kafkaConsumer.poll(250).records(TestConfiguration.kafkaStreamName).map(rec => {
+        received += 1
+        records += rec.value()
+      })
+      if(received < minExpectedCount && waitTimeLeft > 0) {
+        Thread.sleep(1000)
+        waitTimeLeft -= 1000
+      } else {
+        done = false
+      }
+    }
+
+    if(records.size < minExpectedCount) throw new RuntimeException("Fail to read the expected records from kafka")
+
+    records.toList
+  }
+
+  def shutdownKafkaConsumer(): Unit = {
+    if(kafkaConsumer != null) kafkaConsumer.close()
   }
 }

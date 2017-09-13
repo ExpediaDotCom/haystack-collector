@@ -63,7 +63,7 @@ class RecordProcessor(config: KinesisConsumerConfiguration, keyValueExtractor: K
   /**
     * process the incoming kinesis records. This processor extracts the traceId (partition key for kafka) and
     * span as byte array.
-    * @param records
+    * @param records kinesis records
     */
   override def processRecords(records: ProcessRecordsInput): Unit = {
     var lastRecordArrivalTimestamp:Date = null

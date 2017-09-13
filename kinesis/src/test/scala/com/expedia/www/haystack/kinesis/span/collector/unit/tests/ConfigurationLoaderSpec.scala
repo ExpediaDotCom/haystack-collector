@@ -20,6 +20,7 @@ package com.expedia.www.haystack.kinesis.span.collector.unit.tests
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.scalatest.{FunSpec, Matchers}
 
 class ConfigurationLoaderSpec extends FunSpec with Matchers {
@@ -27,20 +28,28 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
   val project = ProjectConfiguration
 
   describe("Configuration loader") {
-    it("should load the span buffer config only from base.conf") {
+    it("should load the kinesis config from base.conf") {
       val kinesis = project.kinesisConsumerConfig()
       kinesis.metricsLevel shouldEqual MetricsLevel.NONE
       kinesis.awsRegion shouldEqual "us-west-2"
       kinesis.appGroupName shouldEqual "haystack-kinesis-proto-span-collector"
       kinesis.checkpointRetries shouldBe 50
+      kinesis.dynamoTableName shouldBe None
       kinesis.checkpointInterval.toMillis shouldBe 15000L
       kinesis.streamPosition shouldEqual InitialPositionInStream.LATEST
-      kinesis.streamName shouldEqual "haystack-test-proto-spans"
+      kinesis.streamName shouldEqual "haystack-proto-spans"
       kinesis.maxRecordsToRead shouldBe 2000
       kinesis.metricsBufferTime.toMillis shouldBe 10000
       kinesis.shardSyncInterval.toMillis shouldBe 30000
       kinesis.kinesisEndpoint.isEmpty shouldBe true
       kinesis.dynamoEndpoint.isEmpty shouldBe true
+      kinesis.taskBackoffTime.toMillis shouldBe 200
+    }
+
+    it("should load the kafka config only from base.conf") {
+      val kafka = project.kafkaProducerConfig()
+      kafka.topic shouldEqual "proto-spans"
+      kafka.props.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG) shouldEqual "kafkasvc:9092"
     }
   }
 }

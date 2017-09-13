@@ -31,8 +31,10 @@ case class KinesisConsumerConfiguration(awsRegion: String,
                                         checkpointRetryInterval: FiniteDuration,
                                         kinesisEndpoint: Option[String],
                                         dynamoEndpoint: Option[String],
+                                        dynamoTableName: Option[String],
                                         maxRecordsToRead: Int,
                                         idleTimeBetweenReads: FiniteDuration,
                                         shardSyncInterval: FiniteDuration,
                                         metricsLevel: MetricsLevel,
-                                        metricsBufferTime: FiniteDuration)
+                                        metricsBufferTime: FiniteDuration,
+                                        taskBackoffTime: FiniteDuration)

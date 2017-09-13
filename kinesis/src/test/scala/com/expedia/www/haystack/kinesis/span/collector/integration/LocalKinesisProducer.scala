@@ -24,6 +24,7 @@ import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder
 import com.amazonaws.services.kinesis.model.ResourceNotFoundException
 import com.amazonaws.{ClientConfiguration, Protocol}
+import com.expedia.www.haystack.kinesis.span.collector.integration.config.TestConfiguration
 
 trait LocalKinesisProducer {
 
@@ -31,9 +32,11 @@ trait LocalKinesisProducer {
     val endpointConfig = new AwsClientBuilder.EndpointConfiguration(s"http://${TestConfiguration.remoteKinesisHost}:${TestConfiguration.kinesisPort}", "us-west-2")
     val clientConfig = new ClientConfiguration().withProtocol(Protocol.HTTP)
 
-    AmazonKinesisClientBuilder.standard()
+    AmazonKinesisClientBuilder
+      .standard()
       .withClientConfiguration(clientConfig)
-      .withEndpointConfiguration(endpointConfig).build()
+      .withEndpointConfiguration(endpointConfig)
+      .build()
   }
 
   protected def createStreamIfNotExists(): Unit = {
@@ -53,5 +56,5 @@ trait LocalKinesisProducer {
     })
   }
 
-  protected def shutdownClient(): Unit = if(client != null) client.shutdown()
+  protected def shutdownKinesisClient(): Unit = if(client != null) client.shutdown()
 }

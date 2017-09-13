@@ -69,11 +69,13 @@ object ProjectConfiguration {
       kinesis.getInt("checkpoint.retries"),
       kinesis.getDuration("checkpoint.retry.interval.ms", TimeUnit.MILLISECONDS).millis,
       kinesisEndpoint = if (kinesis.hasPath("endpoint")) Some(kinesis.getString("endpoint")) else None,
-      dynamoEndpoint = if (kinesis.hasPath("dynamodbEndpoint")) Some(kinesis.getString("dynamodb.endpoint")) else None,
+      dynamoEndpoint = if (kinesis.hasPath("dynamodb.endpoint")) Some(kinesis.getString("dynamodb.endpoint")) else None,
+      dynamoTableName = if(kinesis.hasPath("dynamodb.table")) Some(kinesis.getString("dynamodb.table")) else None,
       maxRecordsToRead = kinesis.getInt("max.records.read"),
       idleTimeBetweenReads = kinesis.getDuration("idle.time.between.reads.ms", TimeUnit.MILLISECONDS).millis,
       shardSyncInterval = kinesis.getDuration("shard.sync.interval.ms", TimeUnit.MILLISECONDS).millis,
       metricsLevel = MetricsLevel.fromName(kinesis.getString("metrics.level")),
-      metricsBufferTime = kinesis.getDuration("metrics.buffer.time.ms", TimeUnit.MILLISECONDS).millis)
+      metricsBufferTime = kinesis.getDuration("metrics.buffer.time.ms", TimeUnit.MILLISECONDS).millis,
+      taskBackoffTime = kinesis.getDuration("task.backoff.ms", TimeUnit.MILLISECONDS).millis)
   }
 }

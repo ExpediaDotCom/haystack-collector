@@ -30,6 +30,6 @@ class IntegrationTestSpec extends WordSpec with GivenWhenThen with Matchers with
 
   override def afterAll(): Unit = {
     // check if the stream exists, if not create one
-    shutdownClient()
+    shutdownKinesisClient()
   }
 }
