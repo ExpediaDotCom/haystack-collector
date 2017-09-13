@@ -1,2 +1,10 @@
 *.class
+*.iml
 *.log
+.classpath
+.project
+logs/
+target/
+.idea/
+node_modules
+package-lock.json

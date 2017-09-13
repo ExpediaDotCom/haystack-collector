@@ -1,0 +1,99 @@
+/*
+ *  Copyright 2017 Expedia, Inc.
+ *
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
+ *
+ */
+
+package com.expedia.www.haystack.kinesis.span.collector.kinesis.client
+
+import java.util.UUID
+
+import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{KinesisClientLibConfiguration, Worker}
+import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
+import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
+import org.slf4j.LoggerFactory
+
+import scala.util.Try
+
+class KinesisConsumer(config: KinesisConsumerConfiguration,
+                      sink: RecordSink) extends AutoCloseable {
+  private val LOGGER = LoggerFactory.getLogger(classOf[KinesisConsumer])
+
+  private var worker: Worker = _
+
+  // this is a blocking call
+  def startWorker(): Unit = {
+    try {
+      worker = buildWorker(createProcessorFactory())
+      // the run method will block this thread, process loop will start now..
+      worker.run()
+    } catch {
+      case ex: Exception =>
+        LOGGER.error("Kinesis worker is crashing down with reason", ex)
+        Try(sink.close())
+    }
+  }
+
+  private def createProcessorFactory() = {
+    new IRecordProcessorFactory {
+      override def createProcessor() = new RecordProcessor(config, new ProtoSpanExtractor(), sink)
+    }
+  }
+
+  /**
+    * build single kinesis consumer worker. This worker creates the processors for shards
+    * @param processorFactory factory to create processor
+    * @return
+    */
+  private def buildWorker(processorFactory: IRecordProcessorFactory): Worker = {
+    val region = Regions.fromName(config.awsRegion)
+
+    val workerId = UUID.randomUUID.toString
+
+    val kinesisClientConfig = new KinesisClientLibConfiguration(
+      config.appGroupName,
+      config.streamName,
+      DefaultAWSCredentialsProviderChain.getInstance.asInstanceOf[AWSCredentialsProvider],
+      DefaultAWSCredentialsProviderChain.getInstance.asInstanceOf[AWSCredentialsProvider],
+      DefaultAWSCredentialsProviderChain.getInstance.asInstanceOf[AWSCredentialsProvider],
+      workerId)
+
+    kinesisClientConfig
+      .withMaxRecords(config.maxRecordsToRead)
+      .withIdleTimeBetweenReadsInMillis(config.idleTimeBetweenReads.toMillis)
+      .withShardSyncIntervalMillis(config.shardSyncInterval.toMillis)
+      .withInitialPositionInStream(config.streamPosition)
+      .withMetricsLevel(config.metricsLevel)
+      .withMetricsBufferTimeMillis(config.metricsBufferTime.toMillis)
+      .withRegionName(region.getName)
+
+    config.dynamoEndpoint.map(kinesisClientConfig.withDynamoDBEndpoint)
+    config.kinesisEndpoint.map(kinesisClientConfig.withKinesisEndpoint)
+
+    new Worker.Builder()
+      .config(kinesisClientConfig)
+      .recordProcessorFactory(processorFactory)
+      .build()
+  }
+
+  /**
+    * close the kinesis worker. The shutdown will also cleanup resources allocated by the worker
+    */
+  override def close(): Unit = worker.shutdown()
+}
