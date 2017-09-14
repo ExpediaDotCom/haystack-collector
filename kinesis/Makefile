@@ -38,7 +38,7 @@ prepare_integration_test_env: docker_build
          -e "AWS_ACCESS_KEY=fake" \
          -e "AWS_SECRET_KEY=fake" \
          -e "AWS_CBOR_DISABLE=1" \
-         $(DOCKER_IMAGE_TAG)
+         $(DOCKER_IMAGE_NAME)
 
 	sleep 15
 
