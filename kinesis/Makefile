@@ -1,6 +1,7 @@
 .PHONY: all integration_test release
 
-DOCKER_IMAGE_TAG := haystack-kinesis-span-collector
+export DOCKER_ORG := expediadotcom
+export DOCKER_IMAGE_NAME := haystack-kinesis-span-collector
 PWD := $(shell pwd)
 
 clean:
