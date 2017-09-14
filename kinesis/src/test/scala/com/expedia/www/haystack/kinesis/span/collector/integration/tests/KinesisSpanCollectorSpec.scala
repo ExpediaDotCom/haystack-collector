@@ -41,9 +41,9 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       readRecordsFromKafka(0, 1.second).headOption
     }
 
-    "read valid messages from kinesis and store in kafka" in {
+    "read valid spans batch from kinesis and store individual spans in kafka" in {
 
-      Given("a valid span")
+      Given("valid span batch")
       val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").build()
       val span_2 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-2").build()
       val spanBatch_1 = Batch.newBuilder().addSpans(span_1).addSpans(span_2).build().toByteArray
@@ -52,10 +52,10 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       val span_4 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-4").build()
       val spanBatch_2 = Batch.newBuilder().addSpans(span_3).addSpans(span_4).build().toByteArray
 
-      When("the span is sent to kinesis")
+      When("the span batch is sent to kinesis")
       produceRecordsToKinesis(List(spanBatch_1, spanBatch_2))
 
-      Then("it should be pushed to kafka")
+      Then("it should be pushed to kafka with partition key as its trace id")
       val records = readRecordsFromKafka(4, 5.seconds)
       records should not be empty
       val spans = records.map(Span.parseFrom)

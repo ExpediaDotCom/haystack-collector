@@ -48,7 +48,7 @@ integration_test: prepare_integration_test_env
 		--network=sandbox_default \
 		-e "AWS_CBOR_DISABLE=1" \
 		-e "AWS_ACCESS_KEY=fake" \
-        -e "AWS_SECRET_KEY=fake" \
+		-e "AWS_SECRET_KEY=fake" \
 		-v $(PWD)/..:/src \
 		-v ~/.m2:/root/.m2 \
 		-w /src/kinesis \
@@ -62,13 +62,5 @@ integration_test: prepare_integration_test_env
 
 all: build docker_build integration_test
 
-# build all and release
-REPO := lib/haystack-kinesis-span-collector
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-ifeq ($(BRANCH), master)
 release: all
-	docker tag $(DOCKER_IMAGE_TAG) $(REPO):latest
-	docker push $(REPO)
-else
-release: all
-endif
+	./build/docker/publish-to-docker-hub.sh
