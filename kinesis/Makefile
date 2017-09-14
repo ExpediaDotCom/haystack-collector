@@ -11,7 +11,7 @@ build:  clean
 	mvn package
 
 docker_build:
-	docker build -t $(DOCKER_IMAGE_TAG) -f build/docker/Dockerfile .
+	docker build -t $(DOCKER_IMAGE_NAME) -f build/docker/Dockerfile .
 
 prepare_integration_test_env: docker_build
 	docker-compose -f build/integration-tests/docker-compose.yml -p sandbox up -d
@@ -38,7 +38,7 @@ prepare_integration_test_env: docker_build
          -e "AWS_ACCESS_KEY=fake" \
          -e "AWS_SECRET_KEY=fake" \
          -e "AWS_CBOR_DISABLE=1" \
-         $(DOCKER_IMAGE_TAG)
+         $(DOCKER_IMAGE_NAME)
 
 	sleep 15
 
