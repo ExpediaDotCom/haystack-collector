@@ -17,15 +17,20 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.kinesis.record
 
+import java.nio.charset.Charset
+
 import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.Batch
+import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format}
+import com.google.protobuf.util.JsonFormat
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
 import scala.util.{Failure, Success, Try}
 
-class ProtoSpanExtractor extends KeyValueExtractor {
+class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor {
   private val LOGGER = LoggerFactory.getLogger(classOf[ProtoSpanExtractor])
+  private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
 
   override def configure(): Unit = ()
 
@@ -33,8 +38,13 @@ class ProtoSpanExtractor extends KeyValueExtractor {
     val recordBytes = record.getData.array()
     Try(Batch.parseFrom(recordBytes)) match {
       case Success(batch) =>
-        val spans = for(span <- batch.getSpansList) yield KeyValuePair(span.getTraceId.getBytes, span.toByteArray)
-        spans.toList
+        batch.getSpansList.map(span => {
+          extractorConfiguration.outputFormat match {
+            case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
+            case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, span.toByteArray)
+          }
+        }).toList
+
       case Failure(ex) =>
         LOGGER.error("Fail to deserialize the span proto bytes with exception", ex)
         Nil

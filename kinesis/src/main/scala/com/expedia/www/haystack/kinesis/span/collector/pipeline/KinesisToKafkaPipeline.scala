@@ -17,13 +17,14 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.{KafkaProduceConfiguration, KinesisConsumerConfiguration}
+import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, KafkaProduceConfiguration, KinesisConsumerConfiguration}
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
 import com.expedia.www.haystack.kinesis.span.collector.sink.kafka.KafkaRecordSink
 
 import scala.util.Try
 
-class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration, kinesisConsumerConfig: KinesisConsumerConfiguration)
+class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration, kinesisConsumerConfig: KinesisConsumerConfiguration,extractorConfiguration: ExtractorConfiguration)
   extends AutoCloseable{
 
   private var kafkaSink: KafkaRecordSink = _
@@ -35,7 +36,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration, kin
     */
   def run(): Unit = {
     kafkaSink = new KafkaRecordSink(kafkaProducerConfig)
-    consumer = new KinesisConsumer(kinesisConsumerConfig, kafkaSink)
+    consumer = new KinesisConsumer(kinesisConsumerConfig,new ProtoSpanExtractor(extractorConfiguration), kafkaSink)
     consumer.startWorker()
   }
 

@@ -25,11 +25,12 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcess
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{KinesisClientLibConfiguration, Worker}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.{KeyValueExtractor, ProtoSpanExtractor}
 import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
 import org.slf4j.LoggerFactory
 
 class KinesisConsumer(config: KinesisConsumerConfiguration,
+                      keyValueExtractor: KeyValueExtractor,
                       sink: RecordSink) extends AutoCloseable {
   private val LOGGER = LoggerFactory.getLogger(classOf[KinesisConsumer])
 
@@ -46,7 +47,7 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
 
   private def createProcessorFactory() = {
     new IRecordProcessorFactory {
-      override def createProcessor() = new RecordProcessor(config, new ProtoSpanExtractor(), sink)
+      override def createProcessor() = new RecordProcessor(config,keyValueExtractor, sink)
     }
   }
 
