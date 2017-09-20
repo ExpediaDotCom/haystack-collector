@@ -26,7 +26,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.{Batch, Span}
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
+import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format, KinesisConsumerConfiguration}
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.{KeyValuePair, ProtoSpanExtractor}
 import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
@@ -68,7 +68,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(), sink)
+        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
 
@@ -113,7 +113,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(), sink)
+        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)), sink)
         val input_1 = new ProcessRecordsInput().withRecords(List(record_1).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input_1)
 
@@ -141,7 +141,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       }.once
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(), sink)
+        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
       }

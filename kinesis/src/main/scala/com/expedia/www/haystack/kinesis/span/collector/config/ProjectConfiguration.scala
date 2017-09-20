@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.{KafkaProduceConfiguration, KinesisConsumerConfiguration}
+import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format, KafkaProduceConfiguration, KinesisConsumerConfiguration}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
 import org.apache.kafka.common.serialization.ByteArraySerializer
@@ -55,6 +55,12 @@ object ProjectConfiguration {
     require(produceTopic.nonEmpty)
 
     KafkaProduceConfiguration(produceTopic, props)
+  }
+
+  def extractorConfiguration(): ExtractorConfiguration = {
+    val extractor = config.getConfig("extractor")
+    ExtractorConfiguration(outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO)
+
   }
 
   def kinesisConsumerConfig(): KinesisConsumerConfiguration = {

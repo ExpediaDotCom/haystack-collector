@@ -34,7 +34,7 @@ object App extends MetricsSupport {
     import ProjectConfiguration._
     try {
       addShutdownHook()
-      pipeline = new KinesisToKafkaPipeline(kafkaProducerConfig(), kinesisConsumerConfig())
+      pipeline = new KinesisToKafkaPipeline(kafkaProducerConfig(), kinesisConsumerConfig(),extractorConfiguration())
       pipeline.run()
     } catch {
       case ex: Exception =>
