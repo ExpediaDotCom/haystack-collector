@@ -49,6 +49,8 @@ class RecordProcessor(config: KinesisConsumerConfiguration, keyValueExtractor: K
   private var shardId: String = _
   private var nextCheckpointTimeInMillis: Long = 0L
 
+  LOGGER.info("Record Process is constructed now..")
+
   private def checkpoint(checkpointer: IRecordProcessorCheckpointer): Unit = {
     LOGGER.debug(s"Performing the checkpointing for shardId=$shardId")
 

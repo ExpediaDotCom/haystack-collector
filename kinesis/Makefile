@@ -1,14 +1,8 @@
-.PHONY: all integration_test release
+.PHONY: integration_test release
 
 export DOCKER_ORG := expediadotcom
 export DOCKER_IMAGE_NAME := haystack-kinesis-span-collector
 PWD := $(shell pwd)
-
-clean:
-	mvn clean
-
-build:  clean
-	mvn package
 
 docker_build:
 	docker build -t $(DOCKER_IMAGE_NAME) -f build/docker/Dockerfile .
@@ -31,10 +25,10 @@ prepare_integration_test_env: docker_build
 	docker run \
 	     --name kinesis-collector \
          -d --network=sandbox_default \
-         -e "HAYSTACK_KINESIS_ENDPOINT=http://kinesis:4567" \
-         -e "HAYSTACK_KINESIS_DYNAMODB_ENDPOINT=http://dynamo:8000" \
-         -e "HAYSTACK_KINESIS_STREAM_NAME=haystack-proto-spans" \
-         -e "HAYSTACK_KAFKA_PRODUCER_PROPS_BOOTSTRAP_SERVERS=kafkasvc:9092" \
+         -e "HAYSTACK_PROP_KINESIS_ENDPOINT=http://kinesis:4567" \
+         -e "HAYSTACK_PROP_KINESIS_DYNAMODB_ENDPOINT=http://dynamo:8000" \
+         -e "HAYSTACK_PROP_KINESIS_STREAM_NAME=haystack-proto-spans" \
+         -e "HAYSTACK_PROP_KAFKA_PRODUCER_PROPS_BOOTSTRAP_SERVERS=kafkasvc:9092" \
          -e "AWS_ACCESS_KEY=fake" \
          -e "AWS_SECRET_KEY=fake" \
          -e "AWS_CBOR_DISABLE=1" \
@@ -52,16 +46,15 @@ integration_test: prepare_integration_test_env
 		-e "AWS_SECRET_KEY=fake" \
 		-v $(PWD)/..:/src \
 		-v ~/.m2:/root/.m2 \
-		-w /src/kinesis \
+		-w /src \
 		maven:3.5.0-jdk-8 \
-		mvn test -P integration-tests
+		mvn test -pl kinesis -am -P integration-tests
 
 	# stop all the containers
 	docker-compose -f build/integration-tests/docker-compose.yml -p sandbox stop
 	docker stop kinesis-collector
-	docker rm kinesis-collector
+	docker rm $(shell docker ps -a -q)
+	docker volume rm $(shell docker volume ls -q)
 
-all: build docker_build integration_test
-
-release: all
-	./build/docker/publish-to-docker-hub.sh
+release: docker_build
+	../scripts/publish-to-docker-hub.sh
