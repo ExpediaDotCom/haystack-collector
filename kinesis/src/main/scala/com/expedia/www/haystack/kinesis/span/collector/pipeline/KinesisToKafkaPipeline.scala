@@ -24,8 +24,10 @@ import com.expedia.www.haystack.kinesis.span.collector.sink.kafka.KafkaRecordSin
 
 import scala.util.Try
 
-class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration, kinesisConsumerConfig: KinesisConsumerConfiguration,extractorConfiguration: ExtractorConfiguration)
-  extends AutoCloseable{
+class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
+                             kinesisConsumerConfig: KinesisConsumerConfiguration,
+                             extractorConfiguration: ExtractorConfiguration)
+  extends AutoCloseable {
 
   private var kafkaSink: KafkaRecordSink = _
   private var consumer: KinesisConsumer = _
@@ -36,7 +38,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration, kin
     */
   def run(): Unit = {
     kafkaSink = new KafkaRecordSink(kafkaProducerConfig)
-    consumer = new KinesisConsumer(kinesisConsumerConfig,new ProtoSpanExtractor(extractorConfiguration), kafkaSink)
+    consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration), kafkaSink)
     consumer.startWorker()
   }
 

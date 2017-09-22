@@ -47,7 +47,7 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
 
   private def createProcessorFactory() = {
     new IRecordProcessorFactory {
-      override def createProcessor() = new RecordProcessor(config,keyValueExtractor, sink)
+      override def createProcessor() = new RecordProcessor(config, keyValueExtractor, sink)
     }
   }
 

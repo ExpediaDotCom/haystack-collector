@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
+import com.expedia.www.haystack.collector.commons.config.ConfigurationLoader
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format, KafkaProduceConfiguration, KinesisConsumerConfiguration}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}

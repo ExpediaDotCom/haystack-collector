@@ -76,7 +76,6 @@ class KeyExtractorSpec extends FunSpec with Matchers {
   }
 
   private def createSpan(traceId: String, spanId: String, serviceName: String) = {
-    val process = com.expedia.open.tracing.Process.newBuilder().setServiceName(serviceName).build()
-    Span.newBuilder().setProcess(process).setTraceId(traceId).setSpanId(spanId).build()
+    Span.newBuilder().setServiceName(serviceName).setTraceId(traceId).setSpanId(spanId).build()
   }
 }
