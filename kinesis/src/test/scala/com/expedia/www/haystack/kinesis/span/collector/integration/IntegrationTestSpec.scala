@@ -17,15 +17,25 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.integration
 
+import java.util.concurrent.Executors
+
+import com.expedia.www.haystack.kinesis.span.collector.App
 import org.scalatest._
-import org.scalatest.time.Span
 
 class IntegrationTestSpec extends WordSpec with GivenWhenThen with Matchers with LocalKinesisProducer with LocalKafkaConsumer
   with OptionValues with BeforeAndAfterAll {
 
+  private val executor = Executors.newSingleThreadExecutor()
+
   override def beforeAll(): Unit = {
     // check if the stream exists, if not create one
     createStreamIfNotExists()
+
+    executor.submit(new Runnable {
+      override def run(): Unit = App.main(null)
+    })
+    // wait for few sec to let app start
+    Thread.sleep(15000)
   }
 
   override def afterAll(): Unit = {

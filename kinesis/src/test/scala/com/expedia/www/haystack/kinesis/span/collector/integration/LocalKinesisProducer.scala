@@ -42,7 +42,6 @@ trait LocalKinesisProducer {
   protected def createStreamIfNotExists(): Unit = {
     try {
       client.describeStream(TestConfiguration.kinesisStreamName)
-      println(s"Kinesis stream ${TestConfiguration.kinesisStreamName} exists!")
     } catch {
       case _: ResourceNotFoundException =>
         println(s"Creating kinesis stream ${TestConfiguration.kinesisStreamName}")

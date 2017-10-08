@@ -78,44 +78,40 @@
         </dependency>
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>integration-tests</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.scalatest</groupId>
-                        <artifactId>scalatest-maven-plugin</artifactId>
-                        <configuration>
-                            <systemProperties>
-                                <application.environment>dev</application.environment>
-                                <application.name>${project.name}</application.name>
-                                <application.home>.</application.home>
-                                <AWS_CBOR_DISABLE>1</AWS_CBOR_DISABLE>
-                            </systemProperties>
-                            <wildcardSuites>com.expedia.www.haystack.kinesis.span.collector.integration.tests</wildcardSuites>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <build>
         <finalName>haystack-kinesis-span-collector</finalName>
         <plugins>
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <configuration>
-                    <environmentVariables>
-                        <HAYSTACK_ELASTICSEARCH_INDEX_NAME_PREFIX>haystack-test</HAYSTACK_ELASTICSEARCH_INDEX_NAME_PREFIX>
-                    </environmentVariables>
-                    <wildcardSuites>com.expedia.www.haystack.kinesis.span.collector.unit.tests</wildcardSuites>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <HAYSTACK_ELASTICSEARCH_INDEX_NAME_PREFIX>haystack-test</HAYSTACK_ELASTICSEARCH_INDEX_NAME_PREFIX>
+                            </environmentVariables>
+                            <wildcardSuites>com.expedia.www.haystack.kinesis.span.collector.unit</wildcardSuites>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <wildcardSuites>com.expedia.www.haystack.kinesis.span.collector.integration</wildcardSuites>
+                            <environmentVariables>
+                                <HAYSTACK_OVERRIDES_CONFIG_PATH>/src/kinesis/build/integration-tests/app-integration-test.conf</HAYSTACK_OVERRIDES_CONFIG_PATH><AWS_ACCESS_KEY>fake</AWS_ACCESS_KEY>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
