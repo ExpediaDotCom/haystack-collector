@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/ExpediaDotCom/haystack-collector.svg?branch=master)](https://travis-ci.org/ExpediaDotCom/haystack-collector)
+[![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaDotCom/haystack/blob/master/LICENSE)
 
 # haystack-collector
 haystack component that collects spans from various sources and publish to kafka. Till today, we have kinesis span collector that reads from kinesis stream and writes the spans to kafka topic
