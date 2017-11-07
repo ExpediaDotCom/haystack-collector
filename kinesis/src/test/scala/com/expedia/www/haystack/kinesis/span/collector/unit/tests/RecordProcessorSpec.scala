@@ -25,7 +25,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionIn
 import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import com.amazonaws.services.kinesis.model.Record
-import com.expedia.open.tracing.{Batch, Span}
+import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format, KinesisConsumerConfiguration}
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.{KeyValuePair, ProtoSpanExtractor}
@@ -50,10 +50,9 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       val checkpointer = mock[IRecordProcessorCheckpointer]
 
       val span_1 = Span.newBuilder().setSpanId("span-id-1").setTraceId("trace-id").build()
-      val spanBatch = Batch.newBuilder().addSpans(span_1).build().toByteArray
       val record = new Record()
         .withApproximateArrivalTimestamp(new Date())
-        .withData(ByteBuffer.wrap(spanBatch))
+        .withData(ByteBuffer.wrap(span_1.toByteArray))
 
       val capturedKVPair = EasyMock.newCapture[KeyValuePair[Array[Byte], Array[Byte]]]()
 
@@ -85,20 +84,17 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       val checkpointer = mock[IRecordProcessorCheckpointer]
 
       val span_1 = Span.newBuilder().setSpanId("span-id-1").setTraceId("trace-id-1").build()
-      val spanBatch_1 = Batch.newBuilder().addSpans(span_1).build().toByteArray
-
       val span_2 = Span.newBuilder().setSpanId("span-id-2").setTraceId("trace-id-2").build()
-      val spanBatch_2 = Batch.newBuilder().addSpans(span_2).build().toByteArray
 
       val record_1 = new Record()
         .withPartitionKey(null)
         .withApproximateArrivalTimestamp(new Date())
-        .withData(ByteBuffer.wrap(spanBatch_1))
+        .withData(ByteBuffer.wrap(span_1.toByteArray))
 
       val record_2 = new Record()
         .withPartitionKey(null)
         .withApproximateArrivalTimestamp(new Date())
-        .withData(ByteBuffer.wrap(spanBatch_2))
+        .withData(ByteBuffer.wrap(span_2.toByteArray))
 
       val captureKvPair = EasyMock.newCapture[KeyValuePair[Array[Byte], Array[Byte]]]()
 
