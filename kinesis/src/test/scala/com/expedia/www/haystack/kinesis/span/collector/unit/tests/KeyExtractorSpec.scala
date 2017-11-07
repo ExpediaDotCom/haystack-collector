@@ -21,7 +21,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
 import com.amazonaws.services.kinesis.model.Record
-import com.expedia.open.tracing.{Batch, Span}
+import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format}
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
 import com.google.protobuf.util.JsonFormat
@@ -35,20 +35,15 @@ class KeyExtractorSpec extends FunSpec with Matchers {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1"),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2"))
 
-      val batchBuilder = Batch.newBuilder()
-      spanMap.values.foreach(span => batchBuilder.addSpans(span))
+      spanMap.foreach(sp => {
+        val kinesisRecord = new Record().withData(ByteBuffer.wrap(sp._2.toByteArray))
 
-      val kinesisRecord = new Record().withData(ByteBuffer.wrap(batchBuilder.build().toByteArray))
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)).extractKeyValuePairs(kinesisRecord)
+        kvPairs.size shouldBe 1
 
-      val kvPairs =  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)).extractKeyValuePairs(kinesisRecord)
-      kvPairs.size shouldBe spanMap.size
-
-      spanMap.foreach {
-        case (traceId, span) =>
-          val spanKv = kvPairs.find(kv => new String(kv.key) == traceId).get
-          spanKv.key shouldBe traceId.getBytes
-          spanKv.value shouldBe span.toByteArray
-      }
+        kvPairs.head.key shouldBe sp._1.getBytes
+        kvPairs.head.value shouldBe sp._2.toByteArray
+      })
     }
   }
 
@@ -58,20 +53,15 @@ class KeyExtractorSpec extends FunSpec with Matchers {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1"),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2"))
 
-      val batchBuilder = Batch.newBuilder()
-      spanMap.values.foreach(span => batchBuilder.addSpans(span))
+      spanMap.foreach(sp => {
+        val kinesisRecord = new Record().withData(ByteBuffer.wrap(sp._2.toByteArray))
 
-      val kinesisRecord = new Record().withData(ByteBuffer.wrap(batchBuilder.build().toByteArray))
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON)).extractKeyValuePairs(kinesisRecord)
+        kvPairs.size shouldBe 1
 
-      val kvPairs =  new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON)).extractKeyValuePairs(kinesisRecord)
-      kvPairs.size shouldBe spanMap.size
-
-      spanMap.foreach {
-        case (traceId, span) =>
-          val spanKv = kvPairs.find(kv => new String(kv.key) == traceId).get
-          spanKv.key shouldBe traceId.getBytes
-          spanKv.value shouldBe JsonFormat.printer().omittingInsignificantWhitespace().print(span).getBytes(Charset.forName("UTF-8"))
-      }
+        kvPairs.head.key shouldBe sp._1.getBytes
+        kvPairs.head.value shouldBe JsonFormat.printer().omittingInsignificantWhitespace().print(sp._2).getBytes(Charset.forName("UTF-8"))
+      })
     }
   }
 
