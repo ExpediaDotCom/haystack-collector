@@ -27,6 +27,7 @@ object App extends MetricsSupport {
   private val LOGGER = LoggerFactory.getLogger(App.getClass)
 
   private var pipeline: KinesisToKafkaPipeline = _
+  private var jmxReporter: JmxReporter = _
 
   def main(args: Array[String]): Unit = {
     startJmxReporter()
@@ -34,12 +35,12 @@ object App extends MetricsSupport {
     import ProjectConfiguration._
     try {
       addShutdownHook()
-      pipeline = new KinesisToKafkaPipeline(kafkaProducerConfig(), kinesisConsumerConfig(),extractorConfiguration())
+      pipeline = new KinesisToKafkaPipeline(kafkaProducerConfig(), kinesisConsumerConfig(), extractorConfiguration())
       pipeline.run()
     } catch {
       case ex: Exception =>
         LOGGER.error("Observed fatal exception while running the app", ex)
-        if(pipeline != null) pipeline.close()
+        shutdown()
         System.exit(1)
     }
   }
@@ -48,12 +49,35 @@ object App extends MetricsSupport {
     Runtime.getRuntime.addShutdownHook(new Thread {
       override def run(): Unit = {
         LOGGER.info("Shutdown hook is invoked, tearing down the application.")
-        if(pipeline != null) pipeline.close()
+        shutdown()
       }
     })
   }
+
+  private def shutdown(): Unit = {
+    if (pipeline != null) pipeline.close()
+    if (jmxReporter != null) jmxReporter.stop()
+    shutdownLogger()
+  }
+
+  private def shutdownLogger(): Unit = {
+    val factory = LoggerFactory.getILoggerFactory
+    val clazz = factory.getClass
+    try {
+      clazz.getMethod("stop").invoke(factory) // logback
+    } catch {
+      case _: ReflectiveOperationException =>
+        try {
+          clazz.getMethod("close").invoke(factory) // log4j
+        } catch {
+          case _: Exception =>
+        }
+      case _: Exception =>
+    }
+  }
+
   private def startJmxReporter() = {
-    val jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
+    jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
     jmxReporter.start()
   }
 }
