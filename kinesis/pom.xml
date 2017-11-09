@@ -58,6 +58,10 @@
             <artifactId>amazon-kinesis-client</artifactId>
             <version>${kinesis.client.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
 
         <!-- test dependencies -->
         <dependency>
