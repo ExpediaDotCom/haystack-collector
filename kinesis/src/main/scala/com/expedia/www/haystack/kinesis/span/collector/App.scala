@@ -46,12 +46,12 @@ object App extends MetricsSupport {
   }
 
   private def addShutdownHook(): Unit = {
-    Runtime.getRuntime.addShutdownHook(new Thread {
+    Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
       override def run(): Unit = {
         LOGGER.info("Shutdown hook is invoked, tearing down the application.")
         shutdown()
       }
-    })
+    }))
   }
 
   private def shutdown(): Unit = {
