@@ -23,6 +23,7 @@ import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import scala.concurrent.duration.FiniteDuration
 
 case class KinesisConsumerConfiguration(awsRegion: String,
+                                        stsRoleArn: Option[String],
                                         appGroupName: String,
                                         streamName: String,
                                         streamPosition: InitialPositionInStream,

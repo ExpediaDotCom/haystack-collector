@@ -66,9 +66,11 @@ object ProjectConfiguration {
 
   def kinesisConsumerConfig(): KinesisConsumerConfiguration = {
     val kinesis = config.getConfig("kinesis")
+    val stsRoleArn = if(kinesis.hasPath("sts.role.arn")) Some(kinesis.getString("sts.role.arn")) else None
 
     KinesisConsumerConfiguration(
       awsRegion = kinesis.getString("aws.region"),
+      stsRoleArn = stsRoleArn,
       appGroupName = kinesis.getString("app.group.name"),
       streamName = kinesis.getString("stream.name"),
       streamPosition =InitialPositionInStream.valueOf(kinesis.getString("stream.position")),
