@@ -27,8 +27,6 @@ import org.slf4j.LoggerFactory
 class KafkaRecordSink(config: KafkaProduceConfiguration) extends RecordSink with MetricsSupport {
 
   private val LOGGER = LoggerFactory.getLogger(classOf[KafkaRecordSink])
-  private val kafkaProducerFailureMeter = metricRegistry.meter(s"kafka.producer-failure")
-  private val kafkaProducerSuccessMeter = metricRegistry.meter(s"kafka.producer-success")
 
   private val producer: KafkaProducer[Array[Byte], Array[Byte]] = new KafkaProducer[Array[Byte], Array[Byte]](config.props)
 
@@ -39,10 +37,7 @@ class KafkaRecordSink(config: KafkaProduceConfiguration) extends RecordSink with
     producer.send(kafkaMessage, new Callback {
       override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
         if (e != null) {
-          kafkaProducerFailureMeter.mark()
           LOGGER.error(s"Fail to produce the message to kafka for topic=${config.topic} with reason", e)
-        } else {
-          kafkaProducerSuccessMeter.mark()
         }
         if(callback != null) callback(kvPair, e)
       }
