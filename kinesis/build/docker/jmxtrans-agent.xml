@@ -15,9 +15,9 @@
         <query objectName="kafka.producer:type=producer-metrics,client-id=*" attribute="requests-in-flight" resultAlias="kafka-producer.request-in-flight.count"/>
         <query objectName="kafka.producer:type=producer-metrics,client-id=*" attribute="batch-size-avg" resultAlias="kafka-producer.batch-size.avg"/>
 
-        <query objectName="metrics:name=kinesis.ingestion-success" resultAlias="kinesis.ingestion-success.OneMinuteRate"/>
-        <query objectName="metrics:name=kinesis.processing.lag" resultAlias="kinesis.processing.lag.#attribute#"/>
-        <query objectName="metrics:name=kinesis.checkpoint.failure" resultAlias="kinesis.checkpoint.failure.OneMinuteRate"/>
+        <query objectName="metrics:name=kinesis.ingestion-success" attributes="OneMinuteRate" resultAlias="kinesis.ingestion-success.#attribute#"/>
+        <query objectName="metrics:name=kinesis.processing.lag" attributes="50thPercentile,75thPercentile,99thPercentile" resultAlias="kinesis.processing.lag.#attribute#"/>
+        <query objectName="metrics:name=kinesis.checkpoint.failure" attributes="OneMinuteRate" resultAlias="kinesis.checkpoint.failure.#attribute#"/>
     </queries>
     <outputWriter class="org.jmxtrans.agent.GraphitePlainTextTcpOutputWriter">
         <host>${graphite.host:monitoring-influxdb-graphite.kube-system.svc}</host>
