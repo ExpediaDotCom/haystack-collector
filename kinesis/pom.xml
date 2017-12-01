@@ -70,6 +70,12 @@
             <version>${aws-sdk.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.expedia.www</groupId>
+            <artifactId>haystack-logback-metrics-appender</artifactId>
+            <version>0.1.1</version>
+        </dependency>
+        
         <!-- test dependencies -->
         <dependency>
             <groupId>com.amazonaws</groupId>
