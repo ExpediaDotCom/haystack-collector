@@ -20,8 +20,8 @@
         <query objectName="metrics:name=kinesis.checkpoint.failure" attributes="OneMinuteRate" resultAlias="kinesis.checkpoint.failure.#attribute#"/>
     </queries>
     <outputWriter class="org.jmxtrans.agent.GraphitePlainTextTcpOutputWriter">
-        <host>${graphite.host:monitoring-influxdb-graphite.kube-system.svc}</host>
-        <port>${graphite.port:2003}</port>
+        <host>${HAYSTACK_GRAPHITE_HOST:monitoring-influxdb-graphite.kube-system.svc}</host>
+        <port>${HAYSTACK_GRAPHITE_PORT:2003}</port>
         <namePrefix>haystack.collector.kinesis.#hostname#.</namePrefix>
     </outputWriter>
     <collectIntervalInSeconds>30</collectIntervalInSeconds>
