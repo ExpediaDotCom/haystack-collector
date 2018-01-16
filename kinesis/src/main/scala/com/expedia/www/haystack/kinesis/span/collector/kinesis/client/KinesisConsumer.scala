@@ -19,14 +19,16 @@ package com.expedia.www.haystack.kinesis.span.collector.kinesis.client
 
 import java.util.UUID
 
+import com.amazonaws.auth.profile.internal.securitytoken.{RoleInfo, STSProfileCredentialsServiceProvider}
 import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{KinesisClientLibConfiguration, Worker}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.{KeyValueExtractor, ProtoSpanExtractor}
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.KeyValueExtractor
 import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 
 class KinesisConsumer(config: KinesisConsumerConfiguration,
@@ -53,6 +55,7 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
 
   /**
     * build single kinesis consumer worker. This worker creates the processors for shards
+    *
     * @param processorFactory factory to create processor
     * @return
     */
@@ -61,12 +64,18 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
 
     val workerId = UUID.randomUUID.toString
 
+
+    val kinesisCredsProvider = config.stsRoleArn match {
+      case Some(arn) if StringUtils.isNotEmpty(arn) => new STSProfileCredentialsServiceProvider(new RoleInfo().withRoleArn(arn).withRoleSessionName(config.appGroupName))
+      case _ => DefaultAWSCredentialsProviderChain.getInstance
+    }
+
     val kinesisClientConfig = new KinesisClientLibConfiguration(
       config.appGroupName,
       config.streamName,
-      DefaultAWSCredentialsProviderChain.getInstance.asInstanceOf[AWSCredentialsProvider],
-      DefaultAWSCredentialsProviderChain.getInstance.asInstanceOf[AWSCredentialsProvider],
-      DefaultAWSCredentialsProviderChain.getInstance.asInstanceOf[AWSCredentialsProvider],
+      kinesisCredsProvider,
+      DefaultAWSCredentialsProviderChain.getInstance,
+      DefaultAWSCredentialsProviderChain.getInstance,
       workerId)
 
     kinesisClientConfig

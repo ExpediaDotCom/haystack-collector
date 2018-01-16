@@ -26,7 +26,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
 import com.amazonaws.services.kinesis.clientlibrary.types.{InitializationInput, ProcessRecordsInput, ShutdownInput}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.KeyValueExtractor
-import com.expedia.www.haystack.kinesis.span.collector.metrics.MetricsSupport
+import com.expedia.www.haystack.kinesis.span.collector.metrics.{AppMetricNames, MetricsSupport}
 import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
 import org.slf4j.LoggerFactory
 
@@ -37,8 +37,9 @@ import scala.util.{Failure, Success, Try}
 
 object RecordProcessor extends MetricsSupport {
   private val LOGGER = LoggerFactory.getLogger(classOf[RecordProcessor])
-  private val ingestionSuccessMeter = metricRegistry.meter(s"kinesis.ingestion-success")
-  private val processingLagHistogram = metricRegistry.histogram("kinesis.processing.lag")
+  private val ingestionSuccessMeter = metricRegistry.meter(AppMetricNames.KINESIS_INGESTION_SUCCESS)
+  private val processingLagHistogram = metricRegistry.histogram(AppMetricNames.KINESIS_PROCESSING_LAG)
+  private val checkpointFailureMeter = metricRegistry.meter(AppMetricNames.KINESIS_CHECKPOINT_FAILURE)
 }
 
 class RecordProcessor(config: KinesisConsumerConfiguration, keyValueExtractor: KeyValueExtractor, sink: RecordSink)
@@ -49,15 +50,15 @@ class RecordProcessor(config: KinesisConsumerConfiguration, keyValueExtractor: K
   private var shardId: String = _
   private var nextCheckpointTimeInMillis: Long = 0L
 
-  LOGGER.info("Record Process is constructed now..")
-
   private def checkpoint(checkpointer: IRecordProcessorCheckpointer): Unit = {
     LOGGER.debug(s"Performing the checkpointing for shardId=$shardId")
 
     retryWithBackOff(config.checkpointRetries, config.checkpointRetryInterval)(() => {
       checkpointer.checkpoint()
     }) match {
-      case Failure(r) => LOGGER.error(s"Fail to checkpoint after all retries for shardId=$shardId with reason", r)
+      case Failure(r) =>
+        checkpointFailureMeter.mark()
+        LOGGER.error(s"Fail to checkpoint after all retries for shardId=$shardId with reason", r)
       case _ => LOGGER.info(s"Successfully checkpointing done for shardId=$shardId")
     }
   }

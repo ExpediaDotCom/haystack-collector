@@ -18,6 +18,7 @@
 package com.expedia.www.haystack.kinesis.span.collector
 
 import com.codahale.metrics.JmxReporter
+import com.expedia.www.haystack.collector.commons.logger.LoggerUtils
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.metrics.MetricsSupport
 import com.expedia.www.haystack.kinesis.span.collector.pipeline.KinesisToKafkaPipeline
@@ -57,23 +58,7 @@ object App extends MetricsSupport {
   private def shutdown(): Unit = {
     if (pipeline != null) pipeline.close()
     if (jmxReporter != null) jmxReporter.stop()
-    shutdownLogger()
-  }
-
-  private def shutdownLogger(): Unit = {
-    val factory = LoggerFactory.getILoggerFactory
-    val clazz = factory.getClass
-    try {
-      clazz.getMethod("stop").invoke(factory) // logback
-    } catch {
-      case _: ReflectiveOperationException =>
-        try {
-          clazz.getMethod("close").invoke(factory) // log4j
-        } catch {
-          case _: Exception =>
-        }
-      case _: Exception =>
-    }
+    LoggerUtils.shutdownLogger()
   }
 
   private def startJmxReporter() = {

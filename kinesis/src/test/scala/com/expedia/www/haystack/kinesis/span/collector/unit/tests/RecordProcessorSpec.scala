@@ -41,7 +41,7 @@ import scala.concurrent.duration._
 class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
   describe("Record Processor") {
 
-    val kinesisConfig = KinesisConsumerConfiguration("us-west-2",
+    val kinesisConfig = KinesisConsumerConfiguration("us-west-2", None,
       "app-group", "stream-1", InitialPositionInStream.LATEST, 10.seconds, 10, 10.seconds, None, None, None,
       10000, 500.millis, 10000.millis, MetricsLevel.NONE, 10000.millis, 200.millis)
 
