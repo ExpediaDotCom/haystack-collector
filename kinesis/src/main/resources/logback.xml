@@ -15,7 +15,13 @@
         </layout>
     </appender>
 
-    <root level="${HAYSTACK_LOG_LEVEL:-INFO}">
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold>
         <appender-ref ref="STDOUT" />
+    </appender>
+
+    <root level="${HAYSTACK_LOG_LEVEL:-INFO}">
+        <appender-ref ref="ASYNC" />
     </root>
 </configuration>
