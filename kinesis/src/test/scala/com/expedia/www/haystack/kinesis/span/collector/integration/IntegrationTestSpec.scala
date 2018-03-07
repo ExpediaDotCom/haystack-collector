@@ -17,6 +17,7 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.integration
 
+import java.io.File
 import java.util.concurrent.Executors
 
 import com.expedia.www.haystack.kinesis.span.collector.App
@@ -30,6 +31,8 @@ class IntegrationTestSpec extends WordSpec with GivenWhenThen with Matchers with
   override def beforeAll(): Unit = {
     // check if the stream exists, if not create one
     createStreamIfNotExists()
+
+    new File("/app").mkdir()
 
     executor.submit(new Runnable {
       override def run(): Unit = App.main(null)

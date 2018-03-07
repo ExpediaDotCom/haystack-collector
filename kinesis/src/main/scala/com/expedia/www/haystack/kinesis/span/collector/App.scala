@@ -18,8 +18,7 @@
 package com.expedia.www.haystack.kinesis.span.collector
 
 import com.codahale.metrics.JmxReporter
-import com.expedia.www.haystack.collector.commons.health.HealthStatus.HealthStatus
-import com.expedia.www.haystack.collector.commons.health.{HealthController, HealthStatusChangeListener, UpdateHealthStatusFile}
+import com.expedia.www.haystack.collector.commons.health.{HealthController, UpdateHealthStatusFile}
 import com.expedia.www.haystack.collector.commons.logger.LoggerUtils
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.metrics.MetricsSupport
