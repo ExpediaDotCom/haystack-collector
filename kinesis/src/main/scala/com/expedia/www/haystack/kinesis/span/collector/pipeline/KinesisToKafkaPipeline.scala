@@ -17,6 +17,7 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
+import com.expedia.www.haystack.collector.commons.health.HealthController
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, KafkaProduceConfiguration, KinesisConsumerConfiguration}
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
