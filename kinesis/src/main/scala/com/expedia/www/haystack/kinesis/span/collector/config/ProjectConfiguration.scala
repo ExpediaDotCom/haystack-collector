@@ -35,6 +35,8 @@ object ProjectConfiguration {
 
   private val config = ConfigurationLoader.loadAppConfig
 
+  def healthStatusFile(): Option[String] = if(config.hasPath("health.status.path")) Some(config.getString("health.status.path")) else None
+
   def kafkaProducerConfig(): KafkaProduceConfiguration = {
     val props = new Properties()
 

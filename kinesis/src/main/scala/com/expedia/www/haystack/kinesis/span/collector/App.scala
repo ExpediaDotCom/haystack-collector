@@ -18,6 +18,7 @@
 package com.expedia.www.haystack.kinesis.span.collector
 
 import com.codahale.metrics.JmxReporter
+import com.expedia.www.haystack.collector.commons.health.{HealthController, UpdateHealthStatusFile}
 import com.expedia.www.haystack.collector.commons.logger.LoggerUtils
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.metrics.MetricsSupport
@@ -33,9 +34,13 @@ object App extends MetricsSupport {
   def main(args: Array[String]): Unit = {
     startJmxReporter()
 
+    addShutdownHook()
+
     import ProjectConfiguration._
     try {
-      addShutdownHook()
+
+      healthStatusFile().foreach(statusFile => HealthController.addListener(new UpdateHealthStatusFile(statusFile)))
+
       pipeline = new KinesisToKafkaPipeline(kafkaProducerConfig(), kinesisConsumerConfig(), extractorConfiguration())
       pipeline.run()
     } catch {

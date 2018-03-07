@@ -24,8 +24,9 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessor
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
 import com.amazonaws.services.kinesis.clientlibrary.types.{InitializationInput, ProcessRecordsInput, ShutdownInput}
+import com.expedia.www.haystack.collector.commons.health.HealthController
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.KeyValueExtractor
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.{KeyValueExtractor, KeyValuePair}
 import com.expedia.www.haystack.kinesis.span.collector.metrics.{AppMetricNames, MetricsSupport}
 import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
 import org.slf4j.LoggerFactory
@@ -76,7 +77,7 @@ class RecordProcessor(config: KinesisConsumerConfiguration, keyValueExtractor: K
       .foreach(record => {
         lastRecordArrivalTimestamp = record.getApproximateArrivalTimestamp
         Try(keyValueExtractor.extractKeyValuePairs(record)) match {
-          case Success(spans) => spans.foreach(sp => sink.toAsync(sp, null))
+          case Success(spans) => spans.foreach(sp => sink.toAsync(sp, sinkResponseHandler))
           case _ => /* skip logging as extractor does it*/
         }
       })
@@ -127,5 +128,9 @@ class RecordProcessor(config: KinesisConsumerConfiguration, keyValueExtractor: K
         retryWithBackOff(maxRetry - 1, backOff)(f)
       case result@_ => result
     }
+  }
+
+  private val sinkResponseHandler = (_: KeyValuePair[Array[Byte], Array[Byte]], ex: Exception) => {
+    if (ex != null) HealthController.setUnhealthy()
   }
 }

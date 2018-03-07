@@ -51,5 +51,9 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
       kafka.topic shouldEqual "proto-spans"
       kafka.props.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG) shouldEqual "kafkasvc:9092"
     }
+
+    it("should load the health status file") {
+      project.healthStatusFile() shouldEqual Some("/app/isHealthy")
+    }
   }
 }

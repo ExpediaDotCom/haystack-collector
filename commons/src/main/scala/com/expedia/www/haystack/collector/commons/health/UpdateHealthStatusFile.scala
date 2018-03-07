@@ -35,7 +35,7 @@ class UpdateHealthStatusFile(statusFilePath: String) extends HealthStatusChangeL
     * @param status: current health status
     */
   override def onChange(status: HealthStatus): Unit = {
-    val isHealthy = if(status == HealthStatus.HEALTHY) "true" else "false"
+    val isHealthy = if (status == HealthStatus.HEALTHY) "true" else "false"
     Files.write(Paths.get(statusFilePath), isHealthy.getBytes(StandardCharsets.UTF_8))
   }
 }

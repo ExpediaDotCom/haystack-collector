@@ -24,6 +24,7 @@ import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{KinesisClientLibConfiguration, Worker}
+import com.expedia.www.haystack.collector.commons.health.HealthController
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.KeyValueExtractor
@@ -43,6 +44,10 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
     worker = buildWorker(createProcessorFactory())
 
     LOGGER.info("Starting the kinesis worker now.")
+
+    // mark collector as healthy
+    HealthController.setHealthy()
+
     // the run method will block this thread, process loop will start now..
     worker.run()
   }
