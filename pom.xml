@@ -38,6 +38,7 @@
         <pegdown.version>1.6.0</pegdown.version>
         <scalatest.version>3.0.3</scalatest.version>
         <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
+        <skipGpg>true</skipGpg>
     </properties>
 
     <dependencyManagement>
@@ -251,28 +252,6 @@
                 </plugin>
 
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.0.2</version>
-                    <configuration>
-                        <archive>
-                            <index>true</index>
-                            <manifest>
-                                <addClasspath>true</addClasspath>
-                            </manifest>
-                            <manifestEntries>
-                                <Application-Name>${project.name}</Application-Name>
-                                <Application-Version>${project.version}</Application-Version>
-                                <Implementation-Title>${project.name}</Implementation-Title>
-                                <Implementation-Vendor>Expedia</Implementation-Vendor>
-                                <Build-Jdk>${java.version}</Build-Jdk>
-                                <Build-Time>${maven.build.timestamp}</Build-Time>
-                            </manifestEntries>
-                        </archive>
-                    </configuration>
-                </plugin>
-
-                <plugin>
                     <groupId>org.scalastyle</groupId>
                     <artifactId>scalastyle-maven-plugin</artifactId>
                     <version>0.8.0</version>
@@ -342,5 +321,24 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                    <skip>${skipGpg}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 </project>

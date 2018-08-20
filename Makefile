@@ -13,10 +13,10 @@ report-coverage:
 
 all: clean kinesis report-coverage
 
-kinesis:
-	mvn package -pl kinesis -am
-	cd kinesis && $(MAKE) integration_test
+build_kinesis:
+	mvn package -DfinalName=haystack-kinesis-span-collector -pl kinesis -am
 
 # build all and release
-release: all
+release: clean build_kinesis
 	cd kinesis && $(MAKE) release
+	./.travis/deploy.sh
