@@ -18,6 +18,7 @@
         <kinesis.producer.version>0.12.3</kinesis.producer.version>
         <aws-sdk.version>1.11.128</aws-sdk.version>
         <mainClass>com.expedia.www.haystack.kinesis.span.collector.App</mainClass>
+        <finalName>${project.artifactId}-${project.version}</finalName>
     </properties>
 
     <dependencies>
@@ -95,7 +96,7 @@
     </dependencies>
 
     <build>
-        <finalName>haystack-kinesis-span-collector</finalName>
+        <finalName>${finalName}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.scalatest</groupId>
@@ -174,11 +175,6 @@
             <plugin>
                 <groupId>org.scalastyle</groupId>
                 <artifactId>scalastyle-maven-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
             </plugin>
 
             <plugin>
