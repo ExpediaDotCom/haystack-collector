@@ -41,5 +41,5 @@ integration_test: prepare_integration_test_env
 	docker rm $(shell docker ps -a -q)
 	docker volume rm $(shell docker volume ls -q)
 
-release:
+release: docker_build
 	../scripts/publish-to-docker-hub.sh
