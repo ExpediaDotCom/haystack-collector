@@ -9,7 +9,7 @@ build: clean
 	mvn package
 
 report-coverage:
-	docker run -it -v ~/.m2:/root/.m2 -w /src -v `pwd`:/src maven:3.5.0-jdk-8 mvn scoverage:report-only
+	docker run -it -v ~/.m2:/root/.m2 -w /src -v `pwd`:/src maven:3.5.0-jdk-8 /bin/sh -c 'mvn scoverage:report-only && mvn clean'
 
 all: clean kinesis report-coverage
 
