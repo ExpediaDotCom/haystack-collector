@@ -104,7 +104,6 @@
                 <executions>
                     <execution>
                         <id>test</id>
-                        <phase>test</phase>
                         <goals>
                             <goal>test</goal>
                         </goals>
@@ -124,7 +123,8 @@
                         <configuration>
                             <wildcardSuites>com.expedia.www.haystack.kinesis.span.collector.integration</wildcardSuites>
                             <environmentVariables>
-                                <HAYSTACK_OVERRIDES_CONFIG_PATH>/src/kinesis/build/integration-tests/app-integration-test.conf</HAYSTACK_OVERRIDES_CONFIG_PATH><AWS_ACCESS_KEY>fake</AWS_ACCESS_KEY>
+                                <HAYSTACK_OVERRIDES_CONFIG_PATH>/src/kinesis/build/integration-tests/app-integration-test.conf</HAYSTACK_OVERRIDES_CONFIG_PATH>
+                                <AWS_ACCESS_KEY>fake</AWS_ACCESS_KEY>
                             </environmentVariables>
                         </configuration>
                     </execution>
