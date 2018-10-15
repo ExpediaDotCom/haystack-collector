@@ -43,10 +43,14 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
     "read valid spans from kinesis and store individual spans in kafka" in {
 
       Given("valid spans")
-      val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").build().toByteArray
-      val span_2 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-2").build().toByteArray
-      val span_3 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-3").build().toByteArray
-      val span_4 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-4").build().toByteArray
+      val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").setOperationName("operation")
+        .build().toByteArray
+      val span_2 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-2").setOperationName("operation")
+        .build().toByteArray
+      val span_3 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-3").setOperationName("operation")
+        .build().toByteArray
+      val span_4 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-4").setOperationName("operation")
+        .build().toByteArray
 
       When("the span is sent to kinesis")
       produceRecordsToKinesis(List(span_1, span_2, span_3, span_4))

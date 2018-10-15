@@ -33,9 +33,19 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
 
   override def configure(): Unit = ()
 
+  def validateOperationName(span: Span): Try[Span] = {
+    if (Option(span.getOperationName).getOrElse("").isEmpty) {
+      Failure(new IllegalArgumentException("Operation Name is required"))
+    } else {
+      Success(span)
+    }
+  }
+
   override def extractKeyValuePairs(record: Record): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     val recordBytes = record.getData.array()
-    Try(Span.parseFrom(recordBytes)) match {
+    Try(Span.parseFrom(recordBytes))
+      .flatMap(span => validateOperationName(span))
+    match {
       case Success(span) =>
           val kvPair = extractorConfiguration.outputFormat match {
             case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))

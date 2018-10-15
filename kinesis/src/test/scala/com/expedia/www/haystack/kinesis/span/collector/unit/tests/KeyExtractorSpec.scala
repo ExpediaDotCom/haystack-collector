@@ -32,8 +32,8 @@ class KeyExtractorSpec extends FunSpec with Matchers {
   describe("TransactionId Key Extractor with proto output type") {
     it("should read the proto span object and set the right partition key and set value as the proto bytestream") {
       val spanMap = Map(
-        "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1"),
-        "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2"))
+        "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1","operation"),
+        "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation"))
 
       spanMap.foreach(sp => {
         val kinesisRecord = new Record().withData(ByteBuffer.wrap(sp._2.toByteArray))
@@ -50,8 +50,8 @@ class KeyExtractorSpec extends FunSpec with Matchers {
   describe("TransactionId Key Extractor with json output type") {
     it("should read the proto span object and set the right partition key and set value as the json bytestream") {
       val spanMap = Map(
-        "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1"),
-        "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2"))
+        "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1","operation"),
+        "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2","operation"))
 
       spanMap.foreach(sp => {
         val kinesisRecord = new Record().withData(ByteBuffer.wrap(sp._2.toByteArray))
@@ -65,7 +65,12 @@ class KeyExtractorSpec extends FunSpec with Matchers {
     }
   }
 
-  private def createSpan(traceId: String, spanId: String, serviceName: String) = {
-    Span.newBuilder().setServiceName(serviceName).setTraceId(traceId).setSpanId(spanId).build()
+  private def createSpan(traceId: String, spanId: String, serviceName: String, operationName: String) = {
+    Span.newBuilder()
+      .setServiceName(serviceName)
+      .setTraceId(traceId)
+      .setSpanId(spanId)
+      .setOperationName(operationName)
+      .build()
   }
 }
