@@ -33,17 +33,39 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
 
   override def configure(): Unit = ()
 
-  def validateOperationName(span: Span): Try[Span] = {
-    if (Option(span.getOperationName).getOrElse("").isEmpty) {
-      Failure(new IllegalArgumentException("Operation Name is required"))
+  private def validate(span: Span,
+                       valueToValidate: String,
+                       msg: String,
+                       additionalInfoForMsg: String): Try[Span] = {
+    if (Option(valueToValidate).getOrElse("").isEmpty) {
+      Failure(new IllegalArgumentException(msg.format(additionalInfoForMsg)))
     } else {
       Success(span)
     }
   }
 
+  def validateSpanId(span: Span): Try[Span] = {
+    validate(span, span.getSpanId, "Span ID is required: trace ID=%s", span.getTraceId)
+  }
+
+  def validateTraceId(span: Span): Try[Span] = {
+    validate(span, span.getTraceId, "Trace ID is required: span ID=%s", span.getSpanId)
+  }
+
+  def validateServiceName(span: Span): Try[Span] = {
+    validate(span, span.getServiceName, "Service Name is required: span ID=%s", span.getSpanId)
+  }
+
+  def validateOperationName(span: Span): Try[Span] = {
+    validate(span, span.getOperationName, "Operation Name is required: span ID=%s", span.getSpanId)
+  }
+
   override def extractKeyValuePairs(record: Record): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     val recordBytes = record.getData.array()
     Try(Span.parseFrom(recordBytes))
+      .flatMap(span => validateSpanId(span))
+      .flatMap(span => validateTraceId(span))
+      .flatMap(span => validateServiceName(span))
       .flatMap(span => validateOperationName(span))
     match {
       case Success(span) =>

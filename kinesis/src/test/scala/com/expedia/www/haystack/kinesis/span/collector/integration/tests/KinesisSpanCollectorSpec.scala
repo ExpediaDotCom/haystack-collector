@@ -44,13 +44,13 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
 
       Given("valid spans")
       val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").setOperationName("operation")
-        .build().toByteArray
+        .setServiceName("service").build().toByteArray
       val span_2 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-2").setOperationName("operation")
-        .build().toByteArray
+        .setServiceName("service").build().toByteArray
       val span_3 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-3").setOperationName("operation")
-        .build().toByteArray
+        .setServiceName("service").build().toByteArray
       val span_4 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-4").setOperationName("operation")
-        .build().toByteArray
+        .setServiceName("service").build().toByteArray
 
       When("the span is sent to kinesis")
       produceRecordsToKinesis(List(span_1, span_2, span_3, span_4))
