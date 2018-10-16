@@ -17,20 +17,27 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers {
   private val TraceId = "trace ID"
   private val ServiceName = "service name"
   private val OperationName = "operation name"
+  private val StartTimeMicros = System.currentTimeMillis() * 1000
+  private val DurationMicros = 42
+  private val Zero = 0
 
   describe("Protobuf Span Extractor") {
     val spanMap = Map(
-      "spanWithNullSpanId" -> createSpan(NullString, TraceId, ServiceName, OperationName),
-      "spanWithEmptySpanId" -> createSpan(EmptyString, TraceId, ServiceName, OperationName),
-      "spanWithNullTraceId" -> createSpan(SpanId, NullString, ServiceName, OperationName),
-      "spanWithEmptyTraceId" -> createSpan(SpanId, EmptyString, ServiceName, OperationName),
-      "spanWithNullServiceName" -> createSpan(SpanId, TraceId, NullString, OperationName),
-      "spanWithEmptyServiceName" -> createSpan(SpanId, TraceId, EmptyString, OperationName),
-      "spanWithNullOperationName" -> createSpan(SpanId, TraceId, ServiceName, NullString),
-      "spanWithEmptyOperationName" -> createSpan(SpanId, TraceId, ServiceName, EmptyString))
+      "spanWithNullSpanId" -> createSpan(NullString, TraceId, ServiceName, OperationName, StartTimeMicros, DurationMicros),
+      "spanWithEmptySpanId" -> createSpan(EmptyString, TraceId, ServiceName, OperationName, StartTimeMicros, DurationMicros),
+      "spanWithNullTraceId" -> createSpan(SpanId, NullString, ServiceName, OperationName, StartTimeMicros, DurationMicros),
+      "spanWithEmptyTraceId" -> createSpan(SpanId, EmptyString, ServiceName, OperationName, StartTimeMicros, DurationMicros),
+      "spanWithNullServiceName" -> createSpan(SpanId, TraceId, NullString, OperationName, StartTimeMicros, DurationMicros),
+      "spanWithEmptyServiceName" -> createSpan(SpanId, TraceId, EmptyString, OperationName, StartTimeMicros, DurationMicros),
+      "spanWithNullOperationName" -> createSpan(SpanId, TraceId, ServiceName, NullString, StartTimeMicros, DurationMicros),
+      "spanWithEmptyOperationName" -> createSpan(SpanId, TraceId, ServiceName, EmptyString, StartTimeMicros, DurationMicros),
+      "spanWithoutStartTime" -> createSpan(SpanId, TraceId, ServiceName, NullString, Zero, DurationMicros),
+      "spanWithoutDuration" -> createSpan(SpanId, TraceId, ServiceName, EmptyString, StartTimeMicros, Zero)
+    )
 
     spanMap.foreach(sp => {
-      val span = createSpan(sp._2.getSpanId, sp._2.getTraceId, sp._2.getServiceName, sp._2.getOperationName)
+      val span = createSpan(sp._2.getSpanId, sp._2.getTraceId, sp._2.getServiceName, sp._2.getOperationName,
+        sp._2.getStartTime, sp._2.getDuration)
       val kinesisRecord = new Record().withData(ByteBuffer.wrap(span.toByteArray))
       val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON)).extractKeyValuePairs(kinesisRecord)
       kvPairs shouldBe Nil
@@ -40,16 +47,28 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers {
   private def createSpan(spanId: String,
                          traceId: String,
                          serviceName: String,
-                         operationName: String) = {
+                         operationName: String,
+                         startTime: Long,
+                         duration: Long) = {
     val builder = Span.newBuilder()
-    if (spanId != null)
+    if (spanId != null) {
       builder.setSpanId(spanId)
-    if (traceId != null)
+    }
+    if (traceId != null) {
       builder.setTraceId(traceId)
-    if (serviceName != null)
+    }
+    if (serviceName != null) {
       builder.setServiceName(serviceName)
-    if (operationName != null)
+    }
+    if (operationName != null) {
       builder.setOperationName(operationName)
+    }
+    if(startTime > 0) {
+      builder.setStartTime(startTime)
+    }
+    if(duration > 0) {
+      builder.setDuration(duration)
+    }
     builder.build()
   }
 }
