@@ -18,14 +18,25 @@
 package com.expedia.www.haystack.kinesis.span.collector.kinesis.record
 
 import java.nio.charset.Charset
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
 import com.google.protobuf.util.JsonFormat
 import org.slf4j.LoggerFactory
 
 import scala.util.{Failure, Success, Try}
+
+object ProtoSpanExtractor {
+  private val DaysInYear1970 = 365
+  private val January_1_1971_00_00_00_GMT: Instant = Instant.EPOCH.plus(DaysInYear1970, ChronoUnit.DAYS)
+  // A common mistake clients often make is to pass in milliseconds instead of microseconds for start time.
+  // Insisting that all start times be > January 1 1971 GMT catches this error.
+  val SmallestAllowedStartTimeMicros: Long = January_1_1971_00_00_00_GMT.getEpochSecond * 1000000
+}
 
 class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor {
   private val LOGGER = LoggerFactory.getLogger(classOf[ProtoSpanExtractor])
@@ -50,11 +61,11 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
   }
 
   def validateStartTime(span: Span): Try[Span] = {
-    validate(span, span.getStartTime, "Start time is required: span ID=%s", span.getSpanId)
+    validate(span, span.getStartTime, "Start time is required: span ID=%s", span.getSpanId, SmallestAllowedStartTimeMicros)
   }
 
   def validateDuration(span: Span): Try[Span] = {
-    validate(span, span.getDuration, "Duration is required: span ID=%s", span.getSpanId)
+    validate(span, span.getDuration, "Duration is required: span ID=%s", span.getSpanId, 0)
   }
 
   private def validate(span: Span,
@@ -71,8 +82,9 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
   private def validate(span: Span,
                        valueToValidate: Long,
                        msg: String,
-                       additionalInfoForMsg: String) = {
-    if (valueToValidate <= 0) {
+                       additionalInfoForMsg: String,
+                       smallestValidValue: Long): Try[Span] = {
+    if (valueToValidate < smallestValidValue) {
       Failure(new IllegalArgumentException(msg.format(additionalInfoForMsg)))
     } else {
       Success(span)
