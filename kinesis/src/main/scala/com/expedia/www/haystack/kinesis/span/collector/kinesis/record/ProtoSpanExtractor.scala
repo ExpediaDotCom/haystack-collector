@@ -33,9 +33,68 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
 
   override def configure(): Unit = ()
 
+  def validateSpanId(span: Span): Try[Span] = {
+    validate(span, span.getSpanId, "Span ID is required: trace ID=%s", span.getTraceId)
+  }
+
+  def validateTraceId(span: Span): Try[Span] = {
+    validate(span, span.getTraceId, "Trace ID is required: span ID=%s", span.getSpanId)
+  }
+
+  def validateServiceName(span: Span): Try[Span] = {
+    validate(span, span.getServiceName, "Service Name is required: span ID=%s", span.getSpanId)
+  }
+
+  def validateOperationName(span: Span): Try[Span] = {
+    validate(span, span.getOperationName, "Operation Name is required: span ID=%s", span.getSpanId)
+  }
+
+  def validateStartTime(span: Span): Try[Span] = {
+    val valueToValidate = span.getStartTime
+    val msg = "Start time is required: span ID=%s"
+    val additionalInfoForMsg = span.getSpanId
+    validate(span, valueToValidate, msg, additionalInfoForMsg)
+  }
+
+  def validateDuration(span: Span): Try[Span] = {
+    val valueToValidate = span.getDuration
+    val msg = "Duration is required: span ID=%s"
+    val additionalInfoForMsg = span.getSpanId
+    validate(span, valueToValidate, msg, additionalInfoForMsg)
+  }
+
+  private def validate(span: Span,
+                       valueToValidate: String,
+                       msg: String,
+                       additionalInfoForMsg: String): Try[Span] = {
+    if (Option(valueToValidate).getOrElse("").isEmpty) {
+      Failure(new IllegalArgumentException(msg.format(additionalInfoForMsg)))
+    } else {
+      Success(span)
+    }
+  }
+
+  private def validate(span: Span,
+                       valueToValidate: Long,
+                       msg: String,
+                       additionalInfoForMsg: String) = {
+    if (valueToValidate <= 0) {
+      Failure(new IllegalArgumentException(msg.format(additionalInfoForMsg)))
+    } else {
+      Success(span)
+    }
+  }
+
   override def extractKeyValuePairs(record: Record): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     val recordBytes = record.getData.array()
-    Try(Span.parseFrom(recordBytes)) match {
+    Try(Span.parseFrom(recordBytes))
+      .flatMap(span => validateSpanId(span))
+      .flatMap(span => validateTraceId(span))
+      .flatMap(span => validateServiceName(span))
+      .flatMap(span => validateOperationName(span))
+      .flatMap(span => validateStartTime(span))
+      .flatMap(span => validateDuration(span))
+    match {
       case Success(span) =>
           val kvPair = extractorConfiguration.outputFormat match {
             case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
