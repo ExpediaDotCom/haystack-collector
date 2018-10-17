@@ -50,17 +50,11 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
   }
 
   def validateStartTime(span: Span): Try[Span] = {
-    val valueToValidate = span.getStartTime
-    val msg = "Start time is required: span ID=%s"
-    val additionalInfoForMsg = span.getSpanId
-    validate(span, valueToValidate, msg, additionalInfoForMsg)
+    validate(span, span.getStartTime, "Start time is required: span ID=%s", span.getSpanId)
   }
 
   def validateDuration(span: Span): Try[Span] = {
-    val valueToValidate = span.getDuration
-    val msg = "Duration is required: span ID=%s"
-    val additionalInfoForMsg = span.getSpanId
-    validate(span, valueToValidate, msg, additionalInfoForMsg)
+    validate(span, span.getDuration, "Duration is required: span ID=%s", span.getSpanId)
   }
 
   private def validate(span: Span,
