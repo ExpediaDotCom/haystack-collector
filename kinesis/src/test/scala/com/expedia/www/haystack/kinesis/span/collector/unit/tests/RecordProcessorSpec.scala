@@ -49,12 +49,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       val sink = mock[RecordSink]
       val checkpointer = mock[IRecordProcessorCheckpointer]
 
-      val span_1 = Span.newBuilder()
-        .setSpanId("span-id-1")
-        .setTraceId("trace-id")
-        .setServiceName("service")
-        .setOperationName("operation")
-        .build()
+      val span_1 = Span.newBuilder().setSpanId("span-id-1").setTraceId("trace-id").build()
       val record = new Record()
         .withApproximateArrivalTimestamp(new Date())
         .withData(ByteBuffer.wrap(span_1.toByteArray))
@@ -88,18 +83,8 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       val sink = mock[RecordSink]
       val checkpointer = mock[IRecordProcessorCheckpointer]
 
-      val span_1 = Span.newBuilder()
-        .setSpanId("span-id-1")
-        .setTraceId("trace-id-1")
-        .setServiceName("service")
-        .setOperationName("operation")
-        .build()
-      val span_2 = Span.newBuilder()
-        .setSpanId("span-id-2")
-        .setTraceId("trace-id-2")
-        .setServiceName("service")
-        .setOperationName("operation")
-        .build()
+      val span_1 = Span.newBuilder().setSpanId("span-id-1").setTraceId("trace-id-1").build()
+      val span_2 = Span.newBuilder().setSpanId("span-id-2").setTraceId("trace-id-2").build()
 
       val record_1 = new Record()
         .withPartitionKey(null)
