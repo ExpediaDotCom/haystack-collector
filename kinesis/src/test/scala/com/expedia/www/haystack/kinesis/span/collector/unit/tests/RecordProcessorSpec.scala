@@ -39,6 +39,8 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
 class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
+  private val StartTimeMicros = System.currentTimeMillis() * 1000
+  private val DurationMicros = 42
   describe("Record Processor") {
 
     val kinesisConfig = KinesisConsumerConfiguration("us-west-2", None,
@@ -54,6 +56,8 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
         .setTraceId("trace-id")
         .setServiceName("service")
         .setOperationName("operation")
+        .setStartTime(StartTimeMicros)
+        .setDuration(DurationMicros)
         .build()
       val record = new Record()
         .withApproximateArrivalTimestamp(new Date())
@@ -93,12 +97,16 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
         .setTraceId("trace-id-1")
         .setServiceName("service")
         .setOperationName("operation")
+        .setStartTime(StartTimeMicros)
+        .setDuration(DurationMicros)
         .build()
       val span_2 = Span.newBuilder()
         .setSpanId("span-id-2")
         .setTraceId("trace-id-2")
         .setServiceName("service")
         .setOperationName("operation")
+        .setStartTime(StartTimeMicros)
+        .setDuration(DurationMicros)
         .build()
 
       val record_1 = new Record()
