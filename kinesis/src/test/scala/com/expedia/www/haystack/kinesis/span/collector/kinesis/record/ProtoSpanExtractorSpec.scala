@@ -20,6 +20,7 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers {
   private val StartTimeMicros = System.currentTimeMillis() * 1000
   private val DurationMicros = 42
   private val Zero = 0
+  private val Negative = -1
 
   describe("Protobuf Span Extractor") {
     val spanMap = Map(
@@ -31,8 +32,10 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers {
       "spanWithEmptyServiceName" -> createSpan(SpanId, TraceId, EmptyString, OperationName, StartTimeMicros, DurationMicros),
       "spanWithNullOperationName" -> createSpan(SpanId, TraceId, ServiceName, NullString, StartTimeMicros, DurationMicros),
       "spanWithEmptyOperationName" -> createSpan(SpanId, TraceId, ServiceName, EmptyString, StartTimeMicros, DurationMicros),
-      "spanWithoutStartTime" -> createSpan(SpanId, TraceId, ServiceName, NullString, Zero, DurationMicros),
-      "spanWithoutDuration" -> createSpan(SpanId, TraceId, ServiceName, EmptyString, StartTimeMicros, Zero)
+      "spanWithZeroStartTime" -> createSpan(SpanId, TraceId, ServiceName, NullString, Zero, DurationMicros),
+      "spanWithNegativeStartTime" -> createSpan(SpanId, TraceId, ServiceName, NullString, Negative, DurationMicros),
+      "spanWithZeroDuration" -> createSpan(SpanId, TraceId, ServiceName, EmptyString, StartTimeMicros, Zero),
+      "spanWithNegativeDuration" -> createSpan(SpanId, TraceId, ServiceName, EmptyString, StartTimeMicros, Negative)
     )
 
     spanMap.foreach(sp => {
