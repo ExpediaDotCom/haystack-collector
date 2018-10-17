@@ -13,6 +13,9 @@ report-coverage:
 
 all: clean kinesis report-coverage
 
+kinesis: build_kinesis
+	cd kinesis && $(MAKE) integration_test
+
 build_kinesis:
 	mvn package -DfinalName=haystack-kinesis-span-collector -pl kinesis -am
 
