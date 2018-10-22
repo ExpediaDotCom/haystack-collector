@@ -18,6 +18,9 @@
         <query objectName="metrics:name=kinesis.ingestion-success" attributes="OneMinuteRate" resultAlias="kinesis.ingestion-success.#attribute#"/>
         <query objectName="metrics:name=kinesis.processing.lag" attributes="50thPercentile,75thPercentile,99thPercentile" resultAlias="kinesis.processing.lag.#attribute#"/>
         <query objectName="metrics:name=kinesis.checkpoint.failure" attributes="OneMinuteRate" resultAlias="kinesis.checkpoint.failure.#attribute#"/>
+
+        <query objectName="metrics:name=valid.span" attributes="OneMinuteRate" resultAlias="valid.span.#attribute#"/>
+        <query objectName="metrics:name=invalid.span" attributes="OneMinuteRate" resultAlias="invalid.span.#attribute#"/>
     </queries>
     <outputWriter class="org.jmxtrans.agent.GraphitePlainTextTcpOutputWriter">
         <host>${HAYSTACK_GRAPHITE_HOST:monitoring-influxdb-graphite.kube-system.svc}</host>

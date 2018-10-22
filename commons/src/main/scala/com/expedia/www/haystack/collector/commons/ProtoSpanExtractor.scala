@@ -37,9 +37,12 @@ object ProtoSpanExtractor {
   val SmallestAllowedStartTimeMicros: Long = January_1_1971_00_00_00_GMT.getEpochSecond * 1000000
 }
 
-class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor {
+class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor with MetricsSupport {
   private val LOGGER = LoggerFactory.getLogger(classOf[ProtoSpanExtractor])
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
+
+  private val invalidSpanMeter = metricRegistry.meter("invalid.span")
+  private val validSpanMeter = metricRegistry.meter("valid.span")
 
   override def configure(): Unit = ()
 
@@ -100,13 +103,15 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
       .flatMap(span => validateDuration(span))
     match {
       case Success(span) =>
-          val kvPair = extractorConfiguration.outputFormat match {
-            case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
-            case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, recordBytes)
-          }
+        validSpanMeter.mark()
+        val kvPair = extractorConfiguration.outputFormat match {
+          case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
+          case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, recordBytes)
+        }
         List(kvPair)
 
       case Failure(ex) =>
+        invalidSpanMeter.mark()
         LOGGER.error("Fail to deserialize the span proto bytes with exception", ex)
         Nil
     }

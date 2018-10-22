@@ -14,6 +14,9 @@
         <query objectName="kafka.producer:type=producer-metrics,client-id=*" attribute="record-error-rate" resultAlias="kafka-producer.record-error.rate"/>
         <query objectName="kafka.producer:type=producer-metrics,client-id=*" attribute="requests-in-flight" resultAlias="kafka-producer.request-in-flight.count"/>
         <query objectName="kafka.producer:type=producer-metrics,client-id=*" attribute="batch-size-avg" resultAlias="kafka-producer.batch-size.avg"/>
+
+        <query objectName="metrics:name=valid.span" attributes="OneMinuteRate" resultAlias="valid.span.#attribute#"/>
+        <query objectName="metrics:name=invalid.span" attributes="OneMinuteRate" resultAlias="invalid.span.#attribute#"/>
     </queries>
     <outputWriter class="org.jmxtrans.agent.GraphitePlainTextTcpOutputWriter">
         <host>${HAYSTACK_GRAPHITE_HOST:monitoring-influxdb-graphite.kube-system.svc}</host>
