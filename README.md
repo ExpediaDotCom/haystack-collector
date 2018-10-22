@@ -2,8 +2,10 @@
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaDotCom/haystack/blob/master/LICENSE)
 
 # haystack-collector
-haystack component that collects spans from various sources and publish to kafka. Till today, we have kinesis span collector that reads from kinesis stream and writes the spans to kafka topic
+This haystack component collects spans from various sources and publish to kafka. As of today, we support two sources:
 
+1. Kinesis: Kinesis span collector reads protobuf serialized spans from a kinesis stream, validates it and write the data to kafka topic.
+2. Http: Http span collector listens on port 8080 for proto serialized span bytes, validates it and write the data to kafka topic.
 
 ## Building
 
@@ -40,5 +42,9 @@ docker-compose
 Run the build and integration tests for individual components with
 ```
 make kinesis
+
+or
+
+make http
 
 ```
