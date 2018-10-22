@@ -21,5 +21,4 @@ object TestConfiguration {
   val remoteKafkaHost = "kafkasvc"
   val kafkaPort = 9092
   val kafkaStreamName = "proto-spans"
-  val kinesisStreamName = "haystack-proto-spans"
 }
