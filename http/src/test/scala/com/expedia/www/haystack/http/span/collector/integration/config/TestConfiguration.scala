@@ -15,14 +15,11 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.metrics
+package com.expedia.www.haystack.http.span.collector.integration.config
 
-import com.codahale.metrics.MetricRegistry
-
-trait MetricsSupport {
-  val metricRegistry: MetricRegistry = MetricsRegistries.metricRegistry
-}
-
-object MetricsRegistries {
-  val metricRegistry = new MetricRegistry()
+object TestConfiguration {
+  val remoteKafkaHost = "kafkasvc"
+  val kafkaPort = 9092
+  val kafkaStreamName = "proto-spans"
+  val kinesisStreamName = "haystack-proto-spans"
 }

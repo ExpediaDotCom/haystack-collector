@@ -18,10 +18,10 @@
 package com.expedia.www.haystack.kinesis.span.collector
 
 import com.codahale.metrics.JmxReporter
+import com.expedia.www.haystack.collector.commons.MetricsSupport
 import com.expedia.www.haystack.collector.commons.health.{HealthController, UpdateHealthStatusFile}
 import com.expedia.www.haystack.collector.commons.logger.LoggerUtils
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
-import com.expedia.www.haystack.kinesis.span.collector.metrics.MetricsSupport
 import com.expedia.www.haystack.kinesis.span.collector.pipeline.KinesisToKafkaPipeline
 import org.slf4j.LoggerFactory
 

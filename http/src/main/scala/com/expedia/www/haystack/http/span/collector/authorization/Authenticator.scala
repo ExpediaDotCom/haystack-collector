@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 Expedia, Inc.
+ *  Copyright 2018 Expedia, Inc.
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -15,13 +15,10 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.sink
+package com.expedia.www.haystack.http.span.collector.authorization
 
-import java.io.Closeable
+import akka.http.scaladsl.model.HttpRequest
 
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.KeyValuePair
-
-trait RecordSink extends Closeable {
-  def toAsync(kvPair: KeyValuePair[Array[Byte], Array[Byte]],
-              callback: (KeyValuePair[Array[Byte], Array[Byte]], Exception) => Unit = null): Unit
+trait Authenticator {
+  def apply(req: HttpRequest): Boolean
 }

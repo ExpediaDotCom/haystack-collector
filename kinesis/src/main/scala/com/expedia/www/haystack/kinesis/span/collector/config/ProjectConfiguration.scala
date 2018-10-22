@@ -17,18 +17,13 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.config
 
-import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
-import com.expedia.www.haystack.collector.commons.config.ConfigurationLoader
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format, KafkaProduceConfiguration, KinesisConsumerConfiguration}
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
-import org.apache.kafka.common.serialization.ByteArraySerializer
+import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExtractorConfiguration, KafkaProduceConfiguration}
+import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 
-import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 
 object ProjectConfiguration {
@@ -37,34 +32,9 @@ object ProjectConfiguration {
 
   def healthStatusFile(): Option[String] = if(config.hasPath("health.status.path")) Some(config.getString("health.status.path")) else None
 
-  def kafkaProducerConfig(): KafkaProduceConfiguration = {
-    val props = new Properties()
+  def kafkaProducerConfig(): KafkaProduceConfiguration = ConfigurationLoader.kafkaProducerConfig(config)
 
-    val kafka = config.getConfig("kafka.producer")
-
-    kafka.getConfig("props").entrySet() foreach {
-      kv => {
-        props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
-      }
-    }
-
-    props.put(KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
-    props.put(VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
-
-    val produceTopic = kafka.getString("topic")
-
-    // verify if at least bootstrap server config is set
-    require(props.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG).nonEmpty)
-    require(produceTopic.nonEmpty)
-
-    KafkaProduceConfiguration(produceTopic, props)
-  }
-
-  def extractorConfiguration(): ExtractorConfiguration = {
-    val extractor = config.getConfig("extractor")
-    ExtractorConfiguration(outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO)
-
-  }
+  def extractorConfiguration(): ExtractorConfiguration = ConfigurationLoader.extractorConfiguration(config)
 
   def kinesisConsumerConfig(): KinesisConsumerConfiguration = {
     val kinesis = config.getConfig("kinesis")

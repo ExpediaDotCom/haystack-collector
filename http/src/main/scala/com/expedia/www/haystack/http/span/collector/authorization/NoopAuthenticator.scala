@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 Expedia, Inc.
+ *  Copyright 2018 Expedia, Inc.
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -15,13 +15,10 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.kinesis.record
+package com.expedia.www.haystack.http.span.collector.authorization
 
-import com.amazonaws.services.kinesis.model.Record
+import akka.http.scaladsl.model.HttpRequest
 
-case class KeyValuePair[K, V](key: K, value: V)
-
-trait KeyValueExtractor {
-  def configure(): Unit
-  def extractKeyValuePairs(record: Record): List[KeyValuePair[Array[Byte], Array[Byte]]]
+object NoopAuthenticator extends Authenticator {
+  override def apply(req: HttpRequest): Boolean = true
 }

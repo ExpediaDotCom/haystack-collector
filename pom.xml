@@ -10,6 +10,7 @@
     <modules>
         <module>commons</module>
         <module>kinesis</module>
+        <module>http</module>
     </modules>
 
     <scm>
@@ -86,6 +87,8 @@
         <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
         <skipGpg>true</skipGpg>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+        <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
+        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -365,13 +368,24 @@
                     <version>${scoverage.plugin.version}</version>
                     <configuration>
                         <!-- need to update this as improve the coverage -->
-                        <minimumCoverage>70</minimumCoverage>
+                        <minimumCoverage>59</minimumCoverage>
                         <failOnMinimumCoverage>true</failOnMinimumCoverage>
                         <highlighting>true</highlighting>
                         <scalaVersion>${scala-library.version}</scalaVersion>
                         <aggregate>true</aggregate>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>${nexus-staging-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven-gpg-plugin.version}</version>
+                </plugin>
+
             </plugins>
         </pluginManagement>
         <plugins>
