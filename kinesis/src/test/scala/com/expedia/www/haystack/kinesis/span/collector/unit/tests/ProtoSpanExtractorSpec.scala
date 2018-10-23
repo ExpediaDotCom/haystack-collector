@@ -1,4 +1,4 @@
-package com.expedia.www.haystack.kinesis.span.collector.kinesis.record
+package com.expedia.www.haystack.kinesis.span.collector.unit.tests
 
 import java.nio.ByteBuffer
 
@@ -6,11 +6,12 @@ import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.ExtractorConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.Format
+import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
 import org.scalatest.FunSpec
 import org.scalatest.Matchers
 
-class ProtoSpanExtractorSpec extends FunSpec with Matchers {
+class  ProtoSpanExtractorSpec extends FunSpec with Matchers {
 
   private val EmptyString = ""
   private val NullString = null
@@ -43,13 +44,43 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers {
       spanMap.foreach(sp => {
         val span = createSpan(sp._2.getSpanId, sp._2.getTraceId, sp._2.getServiceName, sp._2.getOperationName,
           sp._2.getStartTime, sp._2.getDuration)
-        val kinesisRecord = new Record().withData(ByteBuffer.wrap(span.toByteArray))
+        val kinesisRecord = createKinesisRecord(span)
         val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON)).extractKeyValuePairs(kinesisRecord)
         withClue(sp._1) {
           kvPairs shouldBe Nil
         }
       })
     }
+
+    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO))
+
+    it("should pass validation if the number of operation names is below the limit") {
+      for (i <- 0 to ProtoSpanExtractor.MaximumOperationNameCount) {
+        val span = createSpan(SpanId + i, TraceId + i, ServiceName, OperationName + i, StartTime + i, Duration + i)
+        val kinesisRecord = createKinesisRecord(span)
+        val kvPairs = protoSpanExtractor.extractKeyValuePairs(kinesisRecord)
+        kvPairs.size shouldBe 1
+      }
+    }
+
+    it("should fail validation if the number of operation names is above the limit") {
+      val span = createSpan(SpanId, TraceId, ServiceName, OperationName, StartTime, Duration)
+      val kinesisRecord = createKinesisRecord(span)
+      val kvPairs = protoSpanExtractor.extractKeyValuePairs(kinesisRecord)
+      kvPairs shouldBe Nil
+    }
+
+    it("should clear the set of operation names when the TTL has been reached") {
+      val ttlAndOperationNames = ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames.get(ServiceName)
+      ttlAndOperationNames.operationNames.size() shouldBe ProtoSpanExtractor.MaximumOperationNameCount + 1
+      val span = createSpan(SpanId, TraceId, ServiceName, OperationName, StartTime, Duration)
+      protoSpanExtractor.validateOperationNameCount(span, ttlAndOperationNames.getTtlMillis, Duration)
+      ttlAndOperationNames.operationNames.size shouldBe 0
+    }
+  }
+
+  private def createKinesisRecord(span: Span) = {
+    new Record().withData(ByteBuffer.wrap(span.toByteArray))
   }
 
   private def createSpan(spanId: String,
