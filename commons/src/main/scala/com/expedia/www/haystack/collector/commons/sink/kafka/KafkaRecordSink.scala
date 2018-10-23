@@ -15,12 +15,12 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.sink.kafka
+package com.expedia.www.haystack.collector.commons.sink.kafka
 
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.KafkaProduceConfiguration
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.KeyValuePair
-import com.expedia.www.haystack.kinesis.span.collector.metrics.MetricsSupport
-import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
+import com.expedia.www.haystack.collector.commons.MetricsSupport
+import com.expedia.www.haystack.collector.commons.config.KafkaProduceConfiguration
+import com.expedia.www.haystack.collector.commons.record.KeyValuePair
+import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import org.apache.kafka.clients.producer.{ProducerRecord, _}
 import org.slf4j.LoggerFactory
 

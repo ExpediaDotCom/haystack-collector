@@ -18,8 +18,12 @@
 package com.expedia.www.haystack.collector.commons.config
 
 import java.io.File
+import java.util.Properties
 
 import com.typesafe.config.{Config, ConfigFactory}
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
+import org.apache.kafka.common.serialization.ByteArraySerializer
 
 import scala.collection.JavaConversions._
 
@@ -65,5 +69,34 @@ object ConfigurationLoader {
     */
   private def transformEnvVarName(env: String): String = {
     env.replaceFirst(ENV_NAME_PREFIX, "").toLowerCase.replace("_", ".")
+  }
+
+  def kafkaProducerConfig(config: Config): KafkaProduceConfiguration = {
+    val props = new Properties()
+
+    val kafka = config.getConfig("kafka.producer")
+
+    kafka.getConfig("props").entrySet() foreach {
+      kv => {
+        props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
+      }
+    }
+
+    props.put(KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
+    props.put(VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
+
+    val produceTopic = kafka.getString("topic")
+
+    // verify if at least bootstrap server config is set
+    require(props.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG).nonEmpty)
+    require(produceTopic.nonEmpty)
+
+    KafkaProduceConfiguration(produceTopic, props)
+  }
+
+  def extractorConfiguration(config: Config): ExtractorConfiguration = {
+    val extractor = config.getConfig("extractor")
+    ExtractorConfiguration(outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO)
+
   }
 }

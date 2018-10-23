@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 Expedia, Inc.
+ *  Copyright 2018 Expedia, Inc.
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -15,16 +15,15 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.kinesis.record
+package com.expedia.www.haystack.collector.commons
 
 import java.nio.charset.Charset
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format}
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.collector.commons.record.{KeyValueExtractor, KeyValuePair}
 import com.google.protobuf.util.JsonFormat
 import org.slf4j.LoggerFactory
 
@@ -38,9 +37,12 @@ object ProtoSpanExtractor {
   val SmallestAllowedStartTimeMicros: Long = January_1_1971_00_00_00_GMT.getEpochSecond * 1000000
 }
 
-class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor {
+class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor with MetricsSupport {
   private val LOGGER = LoggerFactory.getLogger(classOf[ProtoSpanExtractor])
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
+
+  private val invalidSpanMeter = metricRegistry.meter("invalid.span")
+  private val validSpanMeter = metricRegistry.meter("valid.span")
 
   override def configure(): Unit = ()
 
@@ -61,7 +63,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
   }
 
   def validateStartTime(span: Span): Try[Span] = {
-    validate(span, span.getStartTime, "Start time is required: span ID=%s", span.getSpanId, SmallestAllowedStartTimeMicros)
+    validate(span, span.getStartTime, "Start time is required: span ID=%s", span.getSpanId, ProtoSpanExtractor.SmallestAllowedStartTimeMicros)
   }
 
   def validateDuration(span: Span): Try[Span] = {
@@ -91,8 +93,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
     }
   }
 
-  override def extractKeyValuePairs(record: Record): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
-    val recordBytes = record.getData.array()
+  override def extractKeyValuePairs(recordBytes: Array[Byte]): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     Try(Span.parseFrom(recordBytes))
       .flatMap(span => validateSpanId(span))
       .flatMap(span => validateTraceId(span))
@@ -102,13 +103,15 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
       .flatMap(span => validateDuration(span))
     match {
       case Success(span) =>
-          val kvPair = extractorConfiguration.outputFormat match {
-            case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
-            case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, span.toByteArray)
-          }
+        validSpanMeter.mark()
+        val kvPair = extractorConfiguration.outputFormat match {
+          case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
+          case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, recordBytes)
+        }
         List(kvPair)
 
       case Failure(ex) =>
+        invalidSpanMeter.mark()
         LOGGER.error("Fail to deserialize the span proto bytes with exception", ex)
         Nil
     }

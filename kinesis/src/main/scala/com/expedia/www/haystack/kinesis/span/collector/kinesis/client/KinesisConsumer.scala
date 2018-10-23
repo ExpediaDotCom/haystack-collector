@@ -19,16 +19,16 @@ package com.expedia.www.haystack.kinesis.span.collector.kinesis.client
 
 import java.util.UUID
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.auth.profile.internal.securitytoken.{RoleInfo, STSProfileCredentialsServiceProvider}
-import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{KinesisClientLibConfiguration, Worker}
 import com.expedia.www.haystack.collector.commons.health.HealthController
+import com.expedia.www.haystack.collector.commons.record.KeyValueExtractor
+import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.KeyValueExtractor
-import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 

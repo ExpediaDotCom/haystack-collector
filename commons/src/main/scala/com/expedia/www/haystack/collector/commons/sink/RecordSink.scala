@@ -15,13 +15,13 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.kinesis.record
+package com.expedia.www.haystack.collector.commons.sink
 
-import com.amazonaws.services.kinesis.model.Record
+import java.io.Closeable
 
-case class KeyValuePair[K, V](key: K, value: V)
+import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 
-trait KeyValueExtractor {
-  def configure(): Unit
-  def extractKeyValuePairs(record: Record): List[KeyValuePair[Array[Byte], Array[Byte]]]
+trait RecordSink extends Closeable {
+  def toAsync(kvPair: KeyValuePair[Array[Byte], Array[Byte]],
+              callback: (KeyValuePair[Array[Byte], Array[Byte]], Exception) => Unit = null): Unit
 }

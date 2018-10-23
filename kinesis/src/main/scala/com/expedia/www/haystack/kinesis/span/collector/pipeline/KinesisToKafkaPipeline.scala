@@ -17,11 +17,12 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.collector.commons.health.HealthController
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, KafkaProduceConfiguration, KinesisConsumerConfiguration}
+import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
-import com.expedia.www.haystack.kinesis.span.collector.sink.kafka.KafkaRecordSink
+import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 
 import scala.util.Try
 
