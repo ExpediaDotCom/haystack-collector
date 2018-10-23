@@ -15,8 +15,14 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.config.entities
+package com.expedia.www.haystack.collector.commons
 
-import java.util.Properties
+import com.codahale.metrics.MetricRegistry
 
-case class KafkaProduceConfiguration(topic: String, props: Properties)
+trait MetricsSupport {
+  val metricRegistry: MetricRegistry = MetricsRegistries.metricRegistry
+}
+
+object MetricsRegistries {
+  val metricRegistry = new MetricRegistry()
+}

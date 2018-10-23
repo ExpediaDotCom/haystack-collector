@@ -24,11 +24,12 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessor
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
 import com.amazonaws.services.kinesis.clientlibrary.types.{InitializationInput, ProcessRecordsInput, ShutdownInput}
+import com.expedia.www.haystack.collector.commons.MetricsSupport
 import com.expedia.www.haystack.collector.commons.health.HealthController
+import com.expedia.www.haystack.collector.commons.record.{KeyValueExtractor, KeyValuePair}
+import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.{KeyValueExtractor, KeyValuePair}
-import com.expedia.www.haystack.kinesis.span.collector.metrics.{AppMetricNames, MetricsSupport}
-import com.expedia.www.haystack.kinesis.span.collector.sink.RecordSink
+import com.expedia.www.haystack.kinesis.span.collector.metrics.AppMetricNames
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
@@ -76,7 +77,7 @@ class RecordProcessor(config: KinesisConsumerConfiguration, keyValueExtractor: K
       .getRecords
       .foreach(record => {
         lastRecordArrivalTimestamp = record.getApproximateArrivalTimestamp
-        Try(keyValueExtractor.extractKeyValuePairs(record)) match {
+        Try(keyValueExtractor.extractKeyValuePairs(record.getData.array())) match {
           case Success(spans) => spans.foreach(sp => sink.toAsync(sp, sinkResponseHandler))
           case _ => /* skip logging as extractor does it*/
         }

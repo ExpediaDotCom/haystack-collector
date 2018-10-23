@@ -15,19 +15,15 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.unit.tests
+package com.expedia.www.haystack.collector.commons.unit
 
-import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
-import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.ExtractorConfiguration
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.Format
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import com.google.protobuf.util.JsonFormat
-import org.scalatest.FunSpec
-import org.scalatest.Matchers
+import org.scalatest.{FunSpec, Matchers}
 
 class KeyExtractorSpec extends FunSpec with Matchers {
   private val StartTimeMicros = System.currentTimeMillis() * 1000
@@ -40,9 +36,7 @@ class KeyExtractorSpec extends FunSpec with Matchers {
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, DurationMicros))
 
       spanMap.foreach(sp => {
-        val kinesisRecord = new Record().withData(ByteBuffer.wrap(sp._2.toByteArray))
-
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)).extractKeyValuePairs(kinesisRecord)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes
@@ -58,9 +52,7 @@ class KeyExtractorSpec extends FunSpec with Matchers {
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, 1))
 
       spanMap.foreach(sp => {
-        val kinesisRecord = new Record().withData(ByteBuffer.wrap(sp._2.toByteArray))
-
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON)).extractKeyValuePairs(kinesisRecord)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON)).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes

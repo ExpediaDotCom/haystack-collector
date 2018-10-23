@@ -38,7 +38,7 @@ public class TtlAndOperationNames {
         return ttlMillis.get();
     }
 
-    void setTtlMillis(long ttlMillis) {
+    public void setTtlMillis(long ttlMillis) {
         this.ttlMillis.set(ttlMillis);
     }
 }

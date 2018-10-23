@@ -15,7 +15,7 @@
  *
  */
 
-package com.expedia.www.haystack.kinesis.span.collector.kinesis.record
+package com.expedia.www.haystack.collector.commons
 
 import java.nio.charset.Charset
 import java.time.Instant
@@ -23,16 +23,20 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit.HOURS
 
-import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.kinesis.span.collector.config.entities.{ExtractorConfiguration, Format}
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor.MaximumOperationNameCount
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames
-import com.expedia.www.haystack.kinesis.span.collector.kinesis.record.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.MaximumOperationNameCount
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
+import com.expedia.www.haystack.collector.commons.config.ExtractorConfiguration
+import com.expedia.www.haystack.collector.commons.config.Format
+import com.expedia.www.haystack.collector.commons.record.KeyValueExtractor
+import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.google.protobuf.util.JsonFormat
 import org.slf4j.LoggerFactory
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object ProtoSpanExtractor {
   private val DaysInYear1970 = 365
@@ -45,9 +49,12 @@ object ProtoSpanExtractor {
   val MaximumOperationNameCount = 1000
 }
 
-class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor {
+class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor with MetricsSupport {
   private val LOGGER = LoggerFactory.getLogger(classOf[ProtoSpanExtractor])
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
+
+  private val invalidSpanMeter = metricRegistry.meter("invalid.span")
+  private val validSpanMeter = metricRegistry.meter("valid.span")
 
   override def configure(): Unit = ()
 
@@ -139,8 +146,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
     }
   }
 
-  override def extractKeyValuePairs(record: Record): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
-    val recordBytes = record.getData.array()
+  override def extractKeyValuePairs(recordBytes: Array[Byte]): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     Try(Span.parseFrom(recordBytes))
       .flatMap(span => validateServiceName(span))
       .flatMap(span => validateSpanId(span))
@@ -151,16 +157,18 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
       .flatMap(span => validateOperationNameCount(span, System.currentTimeMillis(), HOURS.toMillis(1)))
     match {
       case Success(span) =>
-          val kvPair = extractorConfiguration.outputFormat match {
-            case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
-            case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, span.toByteArray)
-          }
+        validSpanMeter.mark()
+        val kvPair = extractorConfiguration.outputFormat match {
+          case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
+          case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, span.toByteArray)
+        }
         List(kvPair)
 
       case Failure(ex) =>
+        invalidSpanMeter.mark()
         ex match {
-          case ex: IllegalArgumentException => LOGGER.error (ex.getMessage)
-          case _: java.lang.Exception => LOGGER.error ("Fail to deserialize the span proto bytes with exception", ex)
+          case ex: IllegalArgumentException => LOGGER.error(ex.getMessage)
+          case _: java.lang.Exception => LOGGER.error("Fail to deserialize the span proto bytes with exception", ex)
         }
         Nil
     }
