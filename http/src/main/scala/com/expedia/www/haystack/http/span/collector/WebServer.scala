@@ -20,8 +20,8 @@ package com.expedia.www.haystack.http.span.collector
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{AuthorizationFailedRejection, Route}
 import akka.stream.ActorMaterializer
 import akka.util.ByteString
 import com.codahale.metrics.JmxReporter
@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.sys._
 
 object WebServer extends App with MetricsSupport {
   val LOGGER = LoggerFactory.getLogger(WebServer.getClass)
@@ -49,8 +50,26 @@ object WebServer extends App with MetricsSupport {
   private val jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
   jmxReporter.start()
 
-  // build the routes
-  val route =
+  // start http server on given host and port
+  val bindingFuture = Http(system).bindAndHandle(routes(), http.host, http.port)
+  LOGGER.info(s"Server is now listening at http://${http.host}:${http.port}")
+
+  addShutdownHook { shutdownHook() }
+
+  def processSpan(entity: RequestEntity): Future[StatusCode] = {
+    entity
+      .dataBytes
+      .runFold(ByteString.empty) { case (acc, b) => acc ++ b }
+      .map(_.compact.toArray[Byte])
+      .map(kvExtractor.extractKeyValuePairs)
+      .map(kvPairs => {
+        kvPairs foreach { kv => kafkaSink.toAsync(kv) }
+        StatusCode.int2StatusCode(StatusCodes.Accepted.intValue)
+      })
+  }
+
+  def routes(): Route = {
+    // build the routes
     path("span") {
       post {
         extractRequest {
@@ -70,33 +89,20 @@ object WebServer extends App with MetricsSupport {
           complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, "ACTIVE"))
         }
       }
+  }
 
-  // start http server on given host and port
-  val bindingFuture = Http(system).bindAndHandle(route, http.host, http.port)
-  LOGGER.info(s"Server is now listening at http://${http.host}:${http.port}")
-
-  scala.sys.addShutdownHook(() => {
+  def shutdownHook(): Unit = {
     LOGGER.info("Terminating Server ...")
     bindingFuture
       .flatMap(_.unbind())
-      .onComplete { _ =>
-        kafkaSink.close()
-        materializer.shutdown()
-        system.terminate()
-        jmxReporter.close()
-      }
+      .onComplete { _ => close() }
     Await.result(system.whenTerminated, 30.seconds)
-  })
+  }
 
-  def processSpan(entity: RequestEntity): Future[StatusCode] = {
-    entity
-      .dataBytes
-      .runFold(ByteString.empty) { case (acc, b) => acc ++ b }
-      .map(_.compact.toArray[Byte])
-      .map(kvExtractor.extractKeyValuePairs)
-      .map(kvPairs => {
-        kvPairs foreach { kv => kafkaSink.toAsync(kv) }
-        StatusCode.int2StatusCode(StatusCodes.Accepted.intValue)
-      })
+  def close(): Unit = {
+    kafkaSink.close()
+    materializer.shutdown()
+    system.terminate()
+    jmxReporter.close()
   }
 }

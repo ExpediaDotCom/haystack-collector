@@ -15,7 +15,7 @@
  *
  */
 
-package com.expedia.www.haystack.http.span.collector.authorization
+package com.expedia.www.haystack.http.span.collector.authenticator
 
 import akka.http.scaladsl.model.HttpRequest
 
