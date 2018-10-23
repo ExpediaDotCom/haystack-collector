@@ -63,35 +63,35 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
       span.toString)
   }
 
-  def validateSpanId(span: Span): Try[Span] = {
-    validate(span, span.getSpanId, "Span ID is required: serviceName=[%s]",
-      span.getServiceName)
-  }
-
-  def validateTraceId(span: Span): Try[Span] = {
-    validate(span, span.getTraceId, "Trace ID is required: serviceName=[%s]",
-      span.getServiceName)
-  }
-
   def validateOperationName(span: Span): Try[Span] = {
     validate(span, span.getOperationName, "Operation Name is required: serviceName=[%s]",
       span.getServiceName)
   }
 
+  def validateSpanId(span: Span): Try[Span] = {
+    validate(span, span.getSpanId, "Span ID is required: serviceName=[%s] operationName=[%s]",
+      span.getServiceName, span.getOperationName)
+  }
+
+  def validateTraceId(span: Span): Try[Span] = {
+    validate(span, span.getTraceId, "Trace ID is required: serviceName=[%s] operationName=[%s]",
+      span.getServiceName, span.getOperationName)
+  }
+
   def validateStartTime(span: Span): Try[Span] = {
-    validate(span, span.getStartTime, "Start time [%d] is invalid: serviceName=[%s]",
-      SmallestAllowedStartTimeMicros, span.getServiceName)
+    validate(span, span.getStartTime, "Start time [%d] is invalid: serviceName=[%s] operationName=[%s]",
+      SmallestAllowedStartTimeMicros, span.getServiceName, span.getOperationName)
   }
 
   def validateDuration(span: Span): Try[Span] = {
-    validate(span, span.getDuration, "Duration [%d] is invalid: serviceName=[%s]",
-      0, span.getServiceName)
+    validate(span, span.getDuration, "Duration [%d] is invalid: serviceName=[%s] operationName=[%s]",
+      0, span.getServiceName, span.getOperationName)
   }
 
   private def validate(span: Span,
                        valueToValidate: String,
                        msg: String,
-                       additionalInfoForMsg: String): Try[Span] = {
+                       additionalInfoForMsg: String*): Try[Span] = {
     if (Option(valueToValidate).getOrElse("").isEmpty) {
       Failure(new IllegalArgumentException(msg.format(additionalInfoForMsg)))
     } else {
@@ -103,7 +103,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
                        valueToValidate: Long,
                        msg: String,
                        smallestValidValue: Long,
-                       additionalInfoForMsg: String) = {
+                       additionalInfoForMsg: String*) = {
     if (valueToValidate < smallestValidValue) {
       Failure(new IllegalArgumentException(msg.format(valueToValidate, additionalInfoForMsg)))
     } else {
@@ -150,9 +150,9 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
   override def extractKeyValuePairs(recordBytes: Array[Byte]): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     Try(Span.parseFrom(recordBytes))
       .flatMap(span => validateServiceName(span))
+      .flatMap(span => validateOperationName(span))
       .flatMap(span => validateSpanId(span))
       .flatMap(span => validateTraceId(span))
-      .flatMap(span => validateOperationName(span))
       .flatMap(span => validateStartTime(span))
       .flatMap(span => validateDuration(span))
       .flatMap(span => validateOperationNameCount(span, System.currentTimeMillis(), HOURS.toMillis(1)))
