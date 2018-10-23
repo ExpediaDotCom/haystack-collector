@@ -160,7 +160,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
         validSpanMeter.mark()
         val kvPair = extractorConfiguration.outputFormat match {
           case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
-          case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, span.toByteArray)
+          case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, recordBytes)
         }
         List(kvPair)
 
