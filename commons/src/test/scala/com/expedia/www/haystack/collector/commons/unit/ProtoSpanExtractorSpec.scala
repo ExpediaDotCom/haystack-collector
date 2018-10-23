@@ -1,9 +1,9 @@
 package com.expedia.www.haystack.collector.commons.unit
 
 import com.expedia.open.tracing.Span
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import org.scalatest.{FunSpec, Matchers}
 
 class ProtoSpanExtractorSpec extends FunSpec with Matchers {
@@ -16,7 +16,6 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers {
   private val OperationName = "operation name"
   private val StartTime = System.currentTimeMillis() * 1000
   private val Duration = 42
-  private val Zero = 0
   private val Negative = -1
 
   describe("Protobuf Span Extractor") {
@@ -44,6 +43,30 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers {
           kvPairs shouldBe Nil
         }
       })
+    }
+
+    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO))
+
+    it("should pass validation if the number of operation names is below the limit") {
+      for (i <- 0 to ProtoSpanExtractor.MaximumOperationNameCount) {
+        val span = createSpan(SpanId + i, TraceId + i, ServiceName, OperationName + i, StartTime + i, Duration + i)
+        val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
+        kvPairs.size shouldBe 1
+      }
+    }
+
+    it("should fail validation if the number of operation names is above the limit") {
+      val span = createSpan(SpanId, TraceId, ServiceName, OperationName, StartTime, Duration)
+      val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
+      kvPairs shouldBe Nil
+    }
+
+    it("should clear the set of operation names when the TTL has been reached") {
+      val ttlAndOperationNames = ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames.get(ServiceName)
+      ttlAndOperationNames.operationNames.size() shouldBe ProtoSpanExtractor.MaximumOperationNameCount + 1
+      val span = createSpan(SpanId, TraceId, ServiceName, OperationName, StartTime, Duration)
+      protoSpanExtractor.validateOperationNameCount(span, ttlAndOperationNames.getTtlMillis, Duration)
+      ttlAndOperationNames.operationNames.size shouldBe 0
     }
   }
 
