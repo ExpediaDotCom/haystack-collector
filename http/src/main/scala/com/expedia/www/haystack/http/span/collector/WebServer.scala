@@ -29,6 +29,7 @@ import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.sys._
@@ -38,13 +39,13 @@ object WebServer extends App with MetricsSupport {
 
   // setup kafka sink
   private val kafkaSink = new KafkaRecordSink(ProjectConfiguration.kafkaProducerConfig())
-  private val kvExtractor = new ProtoSpanExtractor(ProjectConfiguration.extractorConfig())
+  private val kvExtractor = new ProtoSpanExtractor(ProjectConfiguration.extractorConfig(), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]))
   private val http = ProjectConfiguration.httpConfig()
 
   // setup actor system
-  implicit val system = ActorSystem("span-collector", ProjectConfiguration.config)
-  implicit val materializer = ActorMaterializer()
-  implicit val executionContext = system.dispatcher
+  implicit val system: ActorSystem = ActorSystem("span-collector", ProjectConfiguration.config)
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   // start jmx reporter
   private val jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
