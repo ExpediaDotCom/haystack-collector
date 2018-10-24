@@ -19,10 +19,10 @@ package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, KafkaProduceConfiguration}
-import com.expedia.www.haystack.collector.commons.health.HealthController
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
+import org.slf4j.LoggerFactory
 
 import scala.util.Try
 
@@ -40,7 +40,8 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
     */
   def run(): Unit = {
     kafkaSink = new KafkaRecordSink(kafkaProducerConfig)
-    consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration), kafkaSink)
+    consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration,
+      LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), kafkaSink)
     consumer.startWorker()
   }
 
