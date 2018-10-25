@@ -19,7 +19,7 @@ package com.expedia.www.haystack.http.span.collector.integration
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest}
+import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 
 import scala.concurrent.Await
@@ -32,9 +32,9 @@ trait HttpProducer {
   protected implicit val executionContext = system.dispatcher
   private val http = Http(system)
 
-  def postHttp(records: List[Array[Byte]]): Unit = {
+  def postHttp(records: List[Array[Byte]], contentType: ContentType = ContentTypes.`application/octet-stream`): Unit = {
     records foreach { record =>
-      val entity = HttpEntity(record)
+      val entity = HttpEntity(contentType, record)
       val request = HttpRequest(method = HttpMethods.POST, uri = "http://localhost:8080/span", entity = entity)
       http.singleRequest(request) onComplete {
         case Failure(ex) => println(s"Failed to post, reason: $ex")
