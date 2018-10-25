@@ -18,7 +18,12 @@
 package com.expedia.www.haystack.http.span.collector.authenticator
 
 import akka.http.scaladsl.model.HttpRequest
+import com.typesafe.config.Config
 
 object NoopAuthenticator extends Authenticator {
   override def apply(req: HttpRequest): Boolean = true
+
+  override def init(config: Config): Unit = ()
+
+  override def close(): Unit = ()
 }

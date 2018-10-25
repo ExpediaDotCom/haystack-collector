@@ -26,17 +26,20 @@ import scala.reflect.ClassTag
 case class HttpConfiguration(host: String = "127.0.0.1", port: Int = 8080, authenticator: Authenticator = NoopAuthenticator)
 
 object ProjectConfiguration {
-  val config: Config = ConfigurationLoader.loadAppConfig
+  val config: Config = ConfigurationLoader.loadConfigFileWithEnvOverrides()
 
   def kafkaProducerConfig(): KafkaProduceConfiguration = ConfigurationLoader.kafkaProducerConfig(config)
   def extractorConfig(): ExtractorConfiguration = ConfigurationLoader.extractorConfiguration(config)
 
-  def httpConfig(): HttpConfiguration = {
+  lazy val httpConfig: HttpConfiguration = {
     val authenticator = if(config.hasPath("http.authenticator")) {
       toInstance[Authenticator](config.getString("http.authenticator"))
     } else {
       NoopAuthenticator
     }
+
+    // initialize the
+    authenticator.init(config)
 
     HttpConfiguration(config.getString("http.host"), config.getInt("http.port"), authenticator)
   }

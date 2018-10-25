@@ -17,8 +17,13 @@
 
 package com.expedia.www.haystack.http.span.collector.authenticator
 
-import akka.http.scaladsl.model.HttpRequest
+import java.io.Closeable
 
-trait Authenticator {
+import akka.http.scaladsl.model.HttpRequest
+import com.typesafe.config.Config
+
+trait Authenticator extends Closeable {
   def apply(req: HttpRequest): Boolean
+
+  def init(config: Config): Unit
 }

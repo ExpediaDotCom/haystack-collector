@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.sys._
+import scala.util.Try
 
 object WebServer extends App with MetricsSupport {
   val LOGGER = LoggerFactory.getLogger(WebServer.getClass)
@@ -45,7 +46,7 @@ object WebServer extends App with MetricsSupport {
     ProjectConfiguration.extractorConfig(),
     LoggerFactory.getLogger(classOf[ProtoSpanExtractor]))
 
-  private val http = ProjectConfiguration.httpConfig()
+  private val http = ProjectConfiguration.httpConfig
 
   // setup actor system
   implicit val system = ActorSystem("span-collector", ProjectConfiguration.config)
@@ -123,7 +124,8 @@ object WebServer extends App with MetricsSupport {
   }
 
   def close(): Unit = {
-    kafkaSink.close()
+    Try(kafkaSink.close())
+    Try(http.authenticator.close())
     materializer.shutdown()
     system.terminate()
     jmxReporter.close()
