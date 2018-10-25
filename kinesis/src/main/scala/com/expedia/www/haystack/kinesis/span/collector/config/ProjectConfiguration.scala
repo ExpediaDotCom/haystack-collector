@@ -28,7 +28,7 @@ import scala.concurrent.duration._
 
 object ProjectConfiguration {
 
-  private val config = ConfigurationLoader.loadAppConfig
+  private val config = ConfigurationLoader.loadConfigFileWithEnvOverrides()
 
   def healthStatusFile(): Option[String] = if(config.hasPath("health.status.path")) Some(config.getString("health.status.path")) else None
 
