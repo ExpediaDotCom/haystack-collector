@@ -27,6 +27,9 @@ import akka.util.ByteString
 import com.codahale.metrics.JmxReporter
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
+import com.expedia.www.haystack.http.span.collector.json.Span
+import org.json4s.DefaultFormats
+import org.json4s.jackson.Serialization
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -45,6 +48,7 @@ object WebServer extends App with MetricsSupport {
   implicit val system = ActorSystem("span-collector", ProjectConfiguration.config)
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
+  implicit val formats = DefaultFormats
 
   // start jmx reporter
   private val jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
@@ -56,18 +60,6 @@ object WebServer extends App with MetricsSupport {
 
   addShutdownHook { shutdownHook() }
 
-  def processSpan(entity: RequestEntity): Future[StatusCode] = {
-    entity
-      .dataBytes
-      .runFold(ByteString.empty) { case (acc, b) => acc ++ b }
-      .map(_.compact.toArray[Byte])
-      .map(kvExtractor.extractKeyValuePairs)
-      .map(kvPairs => {
-        kvPairs foreach { kv => kafkaSink.toAsync(kv) }
-        StatusCode.int2StatusCode(StatusCodes.Accepted.intValue)
-      })
-  }
-
   def routes(): Route = {
     // build the routes
     path("span") {
@@ -75,8 +67,20 @@ object WebServer extends App with MetricsSupport {
         extractRequest {
           req =>
             if (http.authenticator(req)) {
-              complete {
-                processSpan(req.entity)
+              val spanBytes = req.entity
+                .dataBytes
+                .runFold(ByteString.empty) { case (acc, b) => acc ++ b }
+                .map(_.compact.toArray[Byte])
+
+              req.entity.contentType match {
+                case ContentTypes.`application/json` =>
+                  complete {
+                    processJsonSpan(spanBytes)
+                  }
+                case _ =>
+                  complete {
+                    processProtoSpan(spanBytes)
+                  }
               }
             } else {
               reject(AuthorizationFailedRejection)
@@ -89,6 +93,22 @@ object WebServer extends App with MetricsSupport {
           complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, "ACTIVE"))
         }
       }
+  }
+
+  def processProtoSpan(spanBytes: Future[Array[Byte]]): Future[StatusCode] = {
+    spanBytes
+      .map(kvExtractor.extractKeyValuePairs)
+      .map(kvPairs => {
+        kvPairs foreach { kv => kafkaSink.toAsync(kv) }
+        StatusCode.int2StatusCode(StatusCodes.Accepted.intValue)
+      })
+  }
+
+  def processJsonSpan(dataBytes: Future[Array[Byte]]): Future[StatusCode] = {
+    processProtoSpan(
+      dataBytes
+        .map(bytes => Serialization.read[Span](new String(bytes)))
+        .map(span => span.toProto))
   }
 
   def shutdownHook(): Unit = {

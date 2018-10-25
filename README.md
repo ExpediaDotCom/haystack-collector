@@ -4,10 +4,10 @@
 # haystack-collector
 This haystack component collects spans from various sources and publish to kafka. As of today, we support two sources:
 
-1. Kinesis: Kinesis span collector reads proto serialized spans from a kinesis stream, validates it and write the data to kafka topic.
-2. Http: Http span collector listens on port 8080 for proto serialized span bytes, validates it and write the data to kafka topic.
+1. Kinesis: Kinesis span collector reads proto serialized spans from a kinesis stream, validates it and write the data to configured kafka topic.
+2. Http: Http span collector listens on port 8080 for proto or json serialized spans, validate them and write to configured kafka topic. For more detail read [this](./http/README.md)
 
-Spans are validated to ensure they doesn't contan an empty service, operation name and their startTime and duration should be non-zero.
+Spans are validated to ensure they dont't contain an empty service and operation name. The startTime and duration should be non-zero.
 
 ## Building
 

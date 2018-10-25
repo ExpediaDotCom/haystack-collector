@@ -38,6 +38,11 @@
             <artifactId>akka-stream_${scala.major.minor.version}</artifactId>
             <version>${akka-stream.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-jackson_${scala.major.minor.version}</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
