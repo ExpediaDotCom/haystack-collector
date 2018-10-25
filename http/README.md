@@ -4,8 +4,8 @@ The http collector is a web service built on akka-http. It accepts [proto](https
 
 Collector has two endpoints
  1.  `/span`: It is for span ingestion. The 'Content-Type' header is used to understand the data format. Therefore one needs to set it correctly as:
-    1. `application/json`:  Json formatted spans 
-    2. `application/octet-stream`: Proto-serialized binary format.
+ * `application/json`:  Json formatted spans 
+ * `application/octet-stream`: Proto-serialized binary format.
 
  2. `/isActive`: It can be used as a health check by your load balancer
  
