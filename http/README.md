@@ -1,13 +1,13 @@
 # Http Span Collector
 
-The http collector is a web service built on akka-http. It accepts [proto](https://github.com/ExpediaDotCom/haystack-idl/tree/master/proto)serialized and json serialized spans on port 8080(configurable).
+The http collector is a web service built on akka-http. It accepts [proto](https://github.com/ExpediaDotCom/haystack-idl/tree/master/proto) serialized and json serialized spans on port 8080(configurable).
 
 Collector has two endpoints
- 1.  '/span': It is for span ingestion. The 'Content-Type' header is used to understand the data format. Therefore one needs to set it correctly as 
-    * 'application/json':  Json formatted spans 
-    * 'application/octet-stream': Proto-serialized binary format.
+ 1.  `/span`: It is for span ingestion. The 'Content-Type' header is used to understand the data format. Therefore one needs to set it correctly as:
+    ⋅⋅* 'application/json':  Json formatted spans 
+    ⋅⋅* 'application/octet-stream': Proto-serialized binary format.
 
- 2. '/isActive': It can be used as a health check by your load balancer
+ 2. `/isActive`: It can be used as a health check by your load balancer
  
 ### How to publish spans in json format
 
