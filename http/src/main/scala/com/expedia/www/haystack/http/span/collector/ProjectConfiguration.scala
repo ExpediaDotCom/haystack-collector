@@ -33,7 +33,7 @@ object ProjectConfiguration {
 
   def httpConfig(): HttpConfiguration = {
     val authenticator = if(config.hasPath("http.authenticator")) {
-      toInstance[Authenticator](config.getString("authenticator"))
+      toInstance[Authenticator](config.getString("http.authenticator"))
     } else {
       NoopAuthenticator
     }
