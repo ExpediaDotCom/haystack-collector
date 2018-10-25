@@ -24,15 +24,21 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit.HOURS
 
 import com.expedia.open.tracing.Span
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.DurationIsInvalid
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.MaximumOperationNameCount
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.OperationNameIsRequired
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.ServiceNameIsRequired
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SpanIdIsRequired
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.StartTimeIsInvalid
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.TraceIdIsRequired
 import com.expedia.www.haystack.collector.commons.config.ExtractorConfiguration
 import com.expedia.www.haystack.collector.commons.config.Format
 import com.expedia.www.haystack.collector.commons.record.KeyValueExtractor
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.google.protobuf.util.JsonFormat
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 import scala.util.Failure
 import scala.util.Success
@@ -44,13 +50,19 @@ object ProtoSpanExtractor {
   // A common mistake clients often make is to pass in milliseconds instead of microseconds for start time.
   // Insisting that all start times be > January 1 1971 GMT catches this error.
   val SmallestAllowedStartTimeMicros: Long = January_1_1971_00_00_00_GMT.getEpochSecond * 1000000
+  val ServiceNameIsRequired = "Service Name is required: span=[%s]"
+  val OperationNameIsRequired = "Operation Name is required: serviceName=[%s]"
+  val SpanIdIsRequired = "Span ID is required: serviceName=[%s] operationName=[%s]"
+  val TraceIdIsRequired = "Trace ID is required: serviceName=[%s] operationName=[%s]"
+  val StartTimeIsInvalid = "Start time [%d] is invalid: serviceName=[%s] operationName=[%s]"
+  val DurationIsInvalid = "Duration [%d] is invalid: serviceName=[%s] operationName=[%s]"
 
   val ServiceNameVsTtlAndOperationNames = new ConcurrentHashMap[String, TtlAndOperationNames]
   val MaximumOperationNameCount = 1000
 }
 
-class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends KeyValueExtractor with MetricsSupport {
-  private val LOGGER = LoggerFactory.getLogger(classOf[ProtoSpanExtractor])
+class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
+                         val LOGGER: Logger) extends KeyValueExtractor with MetricsSupport {
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
 
   private val invalidSpanMeter = metricRegistry.meter("invalid.span")
@@ -59,41 +71,47 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
   override def configure(): Unit = ()
 
   def validateServiceName(span: Span): Try[Span] = {
-    validate(span, span.getServiceName, "Service Name is required: span=[%s]",
-      span.toString)
+    validate(span, span.getServiceName, ServiceNameIsRequired, span.toString)
   }
 
   def validateOperationName(span: Span): Try[Span] = {
-    validate(span, span.getOperationName, "Operation Name is required: serviceName=[%s]",
-      span.getServiceName)
+    validate(span, span.getOperationName, OperationNameIsRequired, span.getServiceName)
   }
 
   def validateSpanId(span: Span): Try[Span] = {
-    validate(span, span.getSpanId, "Span ID is required: serviceName=[%s] operationName=[%s]",
-      span.getServiceName, span.getOperationName)
+    validate(span, span.getSpanId, SpanIdIsRequired, span.getServiceName, span.getOperationName)
   }
 
   def validateTraceId(span: Span): Try[Span] = {
-    validate(span, span.getTraceId, "Trace ID is required: serviceName=[%s] operationName=[%s]",
-      span.getServiceName, span.getOperationName)
+    validate(span, span.getTraceId, TraceIdIsRequired, span.getServiceName, span.getOperationName)
   }
 
   def validateStartTime(span: Span): Try[Span] = {
-    validate(span, span.getStartTime, "Start time [%d] is invalid: serviceName=[%s] operationName=[%s]",
-      SmallestAllowedStartTimeMicros, span.getServiceName, span.getOperationName)
+    validate(span, span.getStartTime, StartTimeIsInvalid, SmallestAllowedStartTimeMicros, span.getServiceName, span.getOperationName)
   }
 
   def validateDuration(span: Span): Try[Span] = {
-    validate(span, span.getDuration, "Duration [%d] is invalid: serviceName=[%s] operationName=[%s]",
-      0, span.getServiceName, span.getOperationName)
+    validate(span, span.getDuration, DurationIsInvalid, 0, span.getServiceName, span.getOperationName)
   }
 
   private def validate(span: Span,
                        valueToValidate: String,
                        msg: String,
-                       additionalInfoForMsg: String*): Try[Span] = {
+                       serviceName: String): Try[Span] = {
     if (Option(valueToValidate).getOrElse("").isEmpty) {
-      Failure(new IllegalArgumentException(msg.format(additionalInfoForMsg)))
+      Failure(new IllegalArgumentException(msg.format(serviceName)))
+    } else {
+      Success(span)
+    }
+  }
+
+  private def validate(span: Span,
+                       valueToValidate: String,
+                       msg: String,
+                       serviceName: String,
+                       operationName: String): Try[Span] = {
+    if (Option(valueToValidate).getOrElse("").isEmpty) {
+      Failure(new IllegalArgumentException(msg.format(serviceName, operationName)))
     } else {
       Success(span)
     }
@@ -103,9 +121,10 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
                        valueToValidate: Long,
                        msg: String,
                        smallestValidValue: Long,
-                       additionalInfoForMsg: String*) = {
+                       serviceName: String,
+                       operationName: String): Try[Span] = {
     if (valueToValidate < smallestValidValue) {
-      Failure(new IllegalArgumentException(msg.format(valueToValidate, additionalInfoForMsg)))
+      Failure(new IllegalArgumentException(msg.format(valueToValidate, serviceName, operationName)))
     } else {
       Success(span)
     }
@@ -143,7 +162,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration) extends
       if (ttlAndOperationNames.getTtlMillis <= currentTimeMillis) {
         ttlAndOperationNames.operationNames.clear()
       }
-      Failure(new IllegalArgumentException("Too many operation names: serviceName=%s".format(span.getServiceName)))
+      Failure(new IllegalArgumentException("Too many operation names: serviceName=[" + span.getServiceName + "]"))
     }
   }
 

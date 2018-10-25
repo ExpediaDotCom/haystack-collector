@@ -32,6 +32,7 @@ import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.sys._
@@ -41,17 +42,20 @@ object WebServer extends App with MetricsSupport {
 
   // setup kafka sink
   private val kafkaSink = new KafkaRecordSink(ProjectConfiguration.kafkaProducerConfig())
-  private val kvExtractor = new ProtoSpanExtractor(
-    ProjectConfiguration.extractorConfig(),
-    LoggerFactory.getLogger(classOf[ProtoSpanExtractor]))
-
+  private val kvExtractor = new ProtoSpanExtractor(ProjectConfiguration.extractorConfig(), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]))
   private val http = ProjectConfiguration.httpConfig()
 
   // setup actor system
+<<<<<<< HEAD
   implicit val system = ActorSystem("span-collector", ProjectConfiguration.config)
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
   implicit val formats = DefaultFormats
+=======
+  implicit val system: ActorSystem = ActorSystem("span-collector", ProjectConfiguration.config)
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+>>>>>>> master
 
   // start jmx reporter
   private val jmxReporter = JmxReporter.forRegistry(metricRegistry).build()

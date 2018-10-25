@@ -24,19 +24,21 @@ import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import com.google.protobuf.util.JsonFormat
 import org.scalatest.{FunSpec, Matchers}
+import org.slf4j.LoggerFactory
 
 class KeyExtractorSpec extends FunSpec with Matchers {
   private val StartTimeMicros = System.currentTimeMillis() * 1000
   private val DurationMicros = 42
 
   describe("TransactionId Key Extractor with proto output type") {
-    it("should read the proto span object and set the right partition key and set value as the proto bytestream") {
+    it("should read the proto span object and set the right partition key and set value as the proto byte stream") {
       val spanMap = Map(
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, DurationMicros),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, DurationMicros))
 
       spanMap.foreach(sp => {
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)).extractKeyValuePairs(sp._2.toByteArray)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO),
+          LoggerFactory.getLogger(classOf[ProtoSpanExtractor])).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes
@@ -46,13 +48,13 @@ class KeyExtractorSpec extends FunSpec with Matchers {
   }
 
   describe("TransactionId Key Extractor with json output type") {
-    it("should read the proto span object and set the right partition key and set value as the json bytestream") {
+    it("should read the proto span object and set the right partition key and set value as the json byte stream") {
       val spanMap = Map(
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, 1),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, 1))
 
       spanMap.foreach(sp => {
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON)).extractKeyValuePairs(sp._2.toByteArray)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes

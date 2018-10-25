@@ -36,6 +36,7 @@ import org.easymock.EasyMock
 import org.easymock.EasyMock._
 import org.scalatest.easymock.EasyMockSugar
 import org.scalatest.{FunSpec, Matchers}
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
@@ -78,7 +79,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)), sink)
+        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
 
@@ -134,7 +135,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)), sink)
+        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
         val input_1 = new ProcessRecordsInput().withRecords(List(record_1).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input_1)
 
@@ -162,7 +163,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar {
       }.once
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO)), sink)
+        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
       }
