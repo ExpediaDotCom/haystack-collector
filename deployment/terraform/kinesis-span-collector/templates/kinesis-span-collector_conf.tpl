@@ -27,7 +27,7 @@ kinesis {
   }
 
   task.backoff.ms = 200,
-  max.records.read = 2000,
+  max.records.read = 1000,
   idle.time.between.reads.ms = 500,
   shard.sync.interval.ms = 30000
 
