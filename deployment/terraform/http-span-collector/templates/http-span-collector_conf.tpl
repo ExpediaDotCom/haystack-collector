@@ -4,8 +4,9 @@ kafka {
     props {
       bootstrap.servers = "${kafka_endpoint}"
       retries = 50
-      batch.size = 65536
-      linger.ms = 100
+      batch.size = 153600
+      linger.ms = 250
+      compression.type = "lz4"
     }
   }
 }
