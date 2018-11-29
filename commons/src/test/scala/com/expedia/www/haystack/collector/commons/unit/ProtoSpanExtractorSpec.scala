@@ -80,20 +80,20 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
       }
     }
 
-    it("should fail validation if the number of operation names is above the limit") {
-      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
-      val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
-      kvPairs shouldBe Nil
-      verify(mockLogger).error("Too many operation names: serviceName=[" + ServiceName1 + "]")
-    }
+//    it("should fail validation if the number of operation names is above the limit") {
+//      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
+//      val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
+//      kvPairs shouldBe Nil
+//      verify(mockLogger).error("Too many operation names: serviceName=[" + ServiceName1 + "]")
+//    }
 
-    it("should clear the set of operation names when the TTL has been reached") {
-      val ttlAndOperationNames = ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames.get(ServiceName1)
-      ttlAndOperationNames.operationNames.size() shouldBe ProtoSpanExtractor.MaximumOperationNameCount + 1
-      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
-      protoSpanExtractor.validateOperationNameCount(span, ttlAndOperationNames.getTtlMillis, Duration)
-      ttlAndOperationNames.operationNames.size shouldBe 0
-    }
+//    it("should clear the set of operation names when the TTL has been reached") {
+//      val ttlAndOperationNames = ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames.get(ServiceName1)
+//      ttlAndOperationNames.operationNames.size() shouldBe ProtoSpanExtractor.MaximumOperationNameCount + 1
+//      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
+//      protoSpanExtractor.validateOperationNameCount(span, ttlAndOperationNames.getTtlMillis, Duration)
+//      ttlAndOperationNames.operationNames.size shouldBe 0
+//    }
   }
 
   private def createSpan(spanId: String,
