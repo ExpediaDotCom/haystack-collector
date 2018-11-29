@@ -39,10 +39,12 @@ import com.expedia.www.haystack.collector.commons.record.KeyValueExtractor
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.google.protobuf.util.JsonFormat
 import org.slf4j.Logger
+import com.expedia.open.tracing.Tag
 
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 object ProtoSpanExtractor {
   private val DaysInYear1970 = 365
@@ -130,6 +132,26 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     }
   }
 
+  def getEffectiveServiceName(span: Span): String = {
+    val serviceTag = getServiceTag(span)
+    if (serviceTag.isDefined) {
+      val serviceTagValue = serviceTag.get.getVStr
+      if (serviceTagValue == "") { // Span protobuf-generated code returns empty string for a missing tag key
+        span.getServiceName
+      } else {
+        serviceTagValue
+      }
+    } else {
+      span.getServiceName
+    }
+  }
+
+  def getServiceTag(span: Span): Option[Tag] = {
+    span.getTagsList.asScala.find(tag => {
+      tag.getKey.equalsIgnoreCase("service")
+    })
+  }
+
   /**
     * Validate that the operation name cardinality is "small enough." A large operation name count stresses other
     * Haystack services; currently the count is maintained independently in each haystack-collector host instead of
@@ -151,7 +173,8 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
                                  currentTimeMillis: Long,
                                  ttlDurationMillis: Long): Try[Span] = {
     val newTtlMillis = currentTimeMillis + ttlDurationMillis
-    val ttlAndOperationNames = Option(ServiceNameVsTtlAndOperationNames.get(span.getServiceName))
+    val serviceName = getEffectiveServiceName(span)
+    val ttlAndOperationNames = Option(ServiceNameVsTtlAndOperationNames.get(serviceName))
       .getOrElse(new TtlAndOperationNames(newTtlMillis))
     if(ttlAndOperationNames.operationNames.size() <= MaximumOperationNameCount) {
       ServiceNameVsTtlAndOperationNames.put(span.getServiceName, ttlAndOperationNames)
