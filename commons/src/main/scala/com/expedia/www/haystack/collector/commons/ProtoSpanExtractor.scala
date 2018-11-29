@@ -130,6 +130,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     }
   }
 
+  // TODO Emit a metric; see https://github.com/ExpediaDotCom/haystack-collector/issues/62
 //  /**
 //    * Validate that the operation name cardinality is "small enough." A large operation name count stresses other
 //    * Haystack services; currently the count is maintained independently in each haystack-collector host instead of
