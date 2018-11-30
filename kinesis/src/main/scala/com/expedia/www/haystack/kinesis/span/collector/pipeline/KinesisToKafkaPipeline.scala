@@ -40,9 +40,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
     */
   def run(): Unit = {
     kafkaSink = new KafkaRecordSink(kafkaProducerConfig)
-    consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration,
-      metricRegistry.meter(ProtoSpanExtractor.OperationNameCountExceededMeterName),
-      LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), kafkaSink)
+    consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration, LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), kafkaSink)
     consumer.startWorker()
   }
 
