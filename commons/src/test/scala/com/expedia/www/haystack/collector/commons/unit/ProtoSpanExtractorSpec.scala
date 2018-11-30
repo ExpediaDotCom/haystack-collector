@@ -1,5 +1,6 @@
 package com.expedia.www.haystack.collector.commons.unit
 
+import com.codahale.metrics.Meter
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
@@ -10,6 +11,7 @@ import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SmallestAll
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SpanIdIsRequired
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.StartTimeIsInvalid
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.TraceIdIsRequired
+import org.mockito.Mockito
 import org.scalatest.{FunSpec, Matchers}
 import org.slf4j.Logger
 import org.scalatest.mockito.MockitoSugar
@@ -33,7 +35,8 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
 
   describe("Protobuf Span Extractor") {
     val mockLogger = mock[Logger]
-    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), mockLogger)
+    val mockMeter = mock[Meter]
+    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), mockMeter, mockLogger)
 
     val largestInvalidStartTime = SmallestAllowedStartTimeMicros - 1
     // @formatter:off
@@ -70,6 +73,7 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
           verify(mockLogger).error(sp._2._2)
         }
       })
+      Mockito.verifyNoMoreInteractions(mockLogger)
     }
 
     it("should pass validation if the number of operation names is below the limit") {
@@ -80,20 +84,22 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
       }
     }
 
-//    it("should fail validation if the number of operation names is above the limit") {
-//      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
-//      val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
-//      kvPairs shouldBe Nil
-//      verify(mockLogger).error("Too many operation names: serviceName=[" + ServiceName1 + "]")
-//    }
+    it("should emit a metric if the number of operation names is above the limit") {
+      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
+      val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
+      kvPairs.size shouldBe 1
+      verify(mockMeter).mark()
+      Mockito.verifyNoMoreInteractions(mockMeter)
+    }
 
-//    it("should clear the set of operation names when the TTL has been reached") {
-//      val ttlAndOperationNames = ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames.get(ServiceName1)
-//      ttlAndOperationNames.operationNames.size() shouldBe ProtoSpanExtractor.MaximumOperationNameCount + 1
-//      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
-//      protoSpanExtractor.validateOperationNameCount(span, ttlAndOperationNames.getTtlMillis, Duration)
-//      ttlAndOperationNames.operationNames.size shouldBe 0
-//    }
+    it("should clear the set of operation names when the TTL has been reached") {
+      val ttlAndOperationNames = ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames.get(ServiceName1)
+      ttlAndOperationNames.operationNames.size() shouldBe ProtoSpanExtractor.MaximumOperationNameCount + 1
+      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
+      protoSpanExtractor.countOperationNamesForService(span, ttlAndOperationNames.getTtlMillis, Duration)
+      ttlAndOperationNames.operationNames.size shouldBe 0
+    }
+
   }
 
   private def createSpan(spanId: String,
