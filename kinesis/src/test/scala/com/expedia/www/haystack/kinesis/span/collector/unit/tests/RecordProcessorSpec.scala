@@ -79,9 +79,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar with 
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO),
-          metricRegistry.meter(ProtoSpanExtractor.OperationNameCountExceededMeterName),
-          LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
+        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
 
@@ -137,9 +135,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar with 
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO),
-          metricRegistry.meter(ProtoSpanExtractor.OperationNameCountExceededMeterName),
-          LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
+        val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
         val input_1 = new ProcessRecordsInput().withRecords(List(record_1).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input_1)
 
@@ -167,9 +163,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar with 
       }.once
 
       whenExecuting(sink, checkpointer) {
-        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO),
-          metricRegistry.meter(ProtoSpanExtractor.OperationNameCountExceededMeterName),
-          LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
+        val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
       }

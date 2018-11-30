@@ -21,15 +21,11 @@ import java.nio.charset.Charset
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit.HOURS
 
-import com.codahale.metrics.Meter
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.DurationIsInvalid
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.MaximumOperationNameCount
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.OperationNameIsRequired
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.ServiceNameIsRequired
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SpanIdIsRequired
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.StartTimeIsInvalid
@@ -64,8 +60,9 @@ object ProtoSpanExtractor {
 }
 
 class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
-                         val operationNameCountExceededMeter: Meter,
-                         val LOGGER: Logger) extends KeyValueExtractor with MetricsSupport {
+                         val LOGGER: Logger)
+  extends KeyValueExtractor with MetricsSupport {
+
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
 
   private val invalidSpanMeter = metricRegistry.meter("invalid.span")
@@ -133,42 +130,6 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     }
   }
 
-  /**
-    * Validate that the operation name cardinality is "small enough." A large operation name count stresses other
-    * Haystack services; currently the count is maintained independently in each haystack-collector host instead of
-    * being stored in a distributed cache. A one hour TTL is maintained for each service; when a service sends an
-    * excessive number of operation names, the Set of operation names will fill up and cause spans to be rejected,
-    * logging an error and incrementing a counter with each rejection. (A counter is also incremented when a Span is
-    * parsed successfully.) When a Span is rejected, the TTL of the service name is examined; if it indicates that that
-    * TTL has been reached, then the entire set of operation names is cleared, with the expectation and hope that a new
-    * version of the service will have been deployed that sends fewer operation names. If this is not the case, the map
-    * will quickly fill up again, and the cycle will repeat, with spans from the offending service being rejected for
-    * the next hour.
-    *
-    * @param span Span that contains the service name and operation code to be examined
-    * @param currentTimeMillis current time, in milliseconds, exposed for easier unit testing
-    * @param ttlDurationMillis TTL of the operation code in the counting map, exposed for easier unit testing
-    * @return Success(span) if operation name count is acceptably low, Failure(IllegalArgumentException) otherwise
-    */
-  def countOperationNamesForService(span: Span,
-                                    currentTimeMillis: Long,
-                                    ttlDurationMillis: Long): Try[Span] = {
-    val newTtlMillis = currentTimeMillis + ttlDurationMillis
-    val ttlAndOperationNames = Option(ServiceNameVsTtlAndOperationNames.get(span.getServiceName))
-      .getOrElse(new TtlAndOperationNames(newTtlMillis))
-    if(ttlAndOperationNames.operationNames.size() <= MaximumOperationNameCount) {
-      ServiceNameVsTtlAndOperationNames.put(span.getServiceName, ttlAndOperationNames)
-      ttlAndOperationNames.operationNames.add(span.getOperationName)
-      ttlAndOperationNames.setTtlMillis(newTtlMillis)
-    } else {
-      operationNameCountExceededMeter.mark()
-      if (ttlAndOperationNames.getTtlMillis <= currentTimeMillis) {
-        ttlAndOperationNames.operationNames.clear()
-      }
-    }
-    Success(span)
-  }
-
   override def extractKeyValuePairs(recordBytes: Array[Byte]): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     Try(Span.parseFrom(recordBytes))
       .flatMap(span => validateServiceName(span))
@@ -177,7 +138,6 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
       .flatMap(span => validateTraceId(span))
       .flatMap(span => validateStartTime(span))
       .flatMap(span => validateDuration(span))
-      .flatMap(span => countOperationNamesForService(span, System.currentTimeMillis(), HOURS.toMillis(1)))
     match {
       case Success(span) =>
         validSpanMeter.mark()

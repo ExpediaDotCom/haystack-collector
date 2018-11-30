@@ -42,10 +42,7 @@ object WebServer extends App with MetricsSupport {
 
   // setup kafka sink
   private val kafkaSink = new KafkaRecordSink(ProjectConfiguration.kafkaProducerConfig())
-  private val kvExtractor = new ProtoSpanExtractor(
-    ProjectConfiguration.extractorConfig(),
-    metricRegistry.meter(ProtoSpanExtractor.OperationNameCountExceededMeterName),
-    LoggerFactory.getLogger(classOf[ProtoSpanExtractor]))
+  private val kvExtractor = new ProtoSpanExtractor(ProjectConfiguration.extractorConfig(), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]))
 
   private val http = ProjectConfiguration.httpConfig
 

@@ -1,6 +1,5 @@
 package com.expedia.www.haystack.collector.commons.unit
 
-import com.codahale.metrics.Meter
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
@@ -35,8 +34,7 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
 
   describe("Protobuf Span Extractor") {
     val mockLogger = mock[Logger]
-    val mockMeter = mock[Meter]
-    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), mockMeter, mockLogger)
+    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), mockLogger)
 
     val largestInvalidStartTime = SmallestAllowedStartTimeMicros - 1
     // @formatter:off
@@ -82,22 +80,6 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
         val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
         kvPairs.size shouldBe 1
       }
-    }
-
-    it("should emit a metric if the number of operation names is above the limit") {
-      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
-      val kvPairs = protoSpanExtractor.extractKeyValuePairs(span.toByteArray)
-      kvPairs.size shouldBe 1
-      verify(mockMeter).mark()
-      Mockito.verifyNoMoreInteractions(mockMeter)
-    }
-
-    it("should clear the set of operation names when the TTL has been reached") {
-      val ttlAndOperationNames = ProtoSpanExtractor.ServiceNameVsTtlAndOperationNames.get(ServiceName1)
-      ttlAndOperationNames.operationNames.size() shouldBe ProtoSpanExtractor.MaximumOperationNameCount + 1
-      val span = createSpan(SpanId, TraceId, ServiceName1, OperationName1, StartTime, Duration)
-      protoSpanExtractor.countOperationNamesForService(span, ttlAndOperationNames.getTtlMillis, Duration)
-      ttlAndOperationNames.operationNames.size shouldBe 0
     }
 
   }
