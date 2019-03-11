@@ -13,6 +13,7 @@ variable "memory_limit"{}
 variable "jvm_memory_limit"{}
 variable "cpu_request"{}
 variable "cpu_limit"{}
+variable "app_name"{ default = "http-span-collector" }
 variable "env_vars" {}
 variable "service_port" {
   default = 80
