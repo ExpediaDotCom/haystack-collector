@@ -1,5 +1,5 @@
 locals {
-  app_name = "http-span-collector"
+  app_name = "${var.app_name}}"
   config_file_path = "${path.module}/templates/http-span-collector_conf.tpl"
   deployment_yaml_file_path = "${path.module}/templates/deployment_yaml.tpl"
   count = "${var.enabled?1:0}"

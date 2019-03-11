@@ -21,6 +21,7 @@ module "kinesis-span-collector" {
   memory_request = "${var.collector["kinesis_span_collector_memory_request"]}"
   memory_limit = "${var.collector["kinesis_span_collector_memory_limit"]}"
   jvm_memory_limit = "${var.collector["kinesis_span_collector_jvm_memory_limit"]}"
+  app_name = "${var.collector["kinesis_span_collector_app_name"]}"
 }
 
 module "http-span-collector" {
@@ -43,4 +44,5 @@ module "http-span-collector" {
   memory_request = "${var.collector["http_span_collector_memory_request"]}"
   memory_limit = "${var.collector["http_span_collector_memory_limit"]}"
   jvm_memory_limit = "${var.collector["http_span_collector_jvm_memory_limit"]}"
+  app_name = "${var.collector["http_span_collector_app_name"]}"
 }
