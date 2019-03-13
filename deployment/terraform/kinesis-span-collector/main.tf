@@ -26,7 +26,7 @@ data "template_file" "config_data" {
     kinesis_stream_name = "${var.kinesis_stream_name}"
     kafka_endpoint = "${var.kafka_endpoint}"
     sts_role_arn = "${var.sts_role_arn}"
-    kinesis_app_group_name = "${local.app_name}-kinesis-collector"
+    haystack_cluster_name = "${var.haystack_cluster_name}"
   }
 }
 
