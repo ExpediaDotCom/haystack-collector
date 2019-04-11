@@ -34,7 +34,10 @@ import com.expedia.www.haystack.collector.commons.config.ExtractorConfiguration
 import com.expedia.www.haystack.collector.commons.config.Format
 import com.expedia.www.haystack.collector.commons.record.KeyValueExtractor
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
+import com.expedia.www.haystack.collector.commons.transformers.AdditionalTagsSpanDecorator
 import com.google.protobuf.util.JsonFormat
+import decorators.SpanDecorator
+import loader.ExternalSpanDecoratorLoader
 import org.slf4j.Logger
 
 import scala.util.Failure
@@ -60,7 +63,7 @@ object ProtoSpanExtractor {
 }
 
 class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
-                         val LOGGER: Logger)
+                         val LOGGER: Logger, listSpanDecorator: List[SpanDecorator])
   extends KeyValueExtractor with MetricsSupport {
 
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
@@ -141,9 +144,11 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     match {
       case Success(span) =>
         validSpanMeter.mark()
+
+        val updatedSpan = updateSpan(span)
         val kvPair = extractorConfiguration.outputFormat match {
-          case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
-          case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, recordBytes)
+          case Format.JSON => KeyValuePair(updatedSpan.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
+          case Format.PROTO => KeyValuePair(updatedSpan.getTraceId.getBytes, recordBytes)
         }
         List(kvPair)
 
@@ -155,5 +160,11 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
         }
         Nil
     }
+  }
+
+  def updateSpan(span: Span): Span = {
+    var tempSpan = span
+    listSpanDecorator.foreach(decorator => {tempSpan = decorator.decorate(tempSpan)})
+    tempSpan
   }
 }

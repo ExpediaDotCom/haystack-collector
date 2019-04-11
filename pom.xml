@@ -11,6 +11,7 @@
         <module>commons</module>
         <module>kinesis</module>
         <module>http</module>
+        <module>decorator</module>
     </modules>
 
     <scm>
