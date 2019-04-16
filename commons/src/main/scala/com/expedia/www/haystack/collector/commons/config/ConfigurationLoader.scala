@@ -147,4 +147,18 @@ object ConfigurationLoader {
     val extractor = config.getConfig("extractor")
     ExtractorConfiguration(outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO)
   }
+
+  def externalKafkaConfiguration(config: Config): Map[String, String] = {
+    var mapTenantIdKafkaBrokers: Map[String, String] = Map()
+
+    val kafkaProducerConfig: String = config.getString("external.kafka.endpoints")
+
+    ConfigFactory.parseString(kafkaProducerConfig).entrySet() foreach {
+      kv => {
+        mapTenantIdKafkaBrokers = mapTenantIdKafkaBrokers + (kv.getKey -> kv.getValue.toString)
+      }
+    }
+
+    mapTenantIdKafkaBrokers
+  }
 }

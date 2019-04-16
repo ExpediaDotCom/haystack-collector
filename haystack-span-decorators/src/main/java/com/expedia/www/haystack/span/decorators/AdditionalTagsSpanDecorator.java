@@ -1,4 +1,4 @@
-package decorators;
+package com.expedia.www.haystack.span.decorators;
 
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;

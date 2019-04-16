@@ -27,7 +27,7 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
 
   val project = ProjectConfiguration
 
-  describe("Configuration loader") {
+  describe("Configuration com.expedia.www.haystack.span.loader") {
     it("should load the kinesis config from base.conf") {
       val kinesis = project.kinesisConsumerConfig()
       kinesis.metricsLevel shouldEqual MetricsLevel.NONE

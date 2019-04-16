@@ -34,7 +34,7 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
 
   describe("Protobuf Span Extractor") {
     val mockLogger = mock[Logger]
-    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), mockLogger)
+    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), mockLogger, List())
 
     val largestInvalidStartTime = SmallestAllowedStartTimeMicros - 1
     // @formatter:off

@@ -59,4 +59,6 @@ object ProjectConfiguration {
       metricsBufferTime = kinesis.getDuration("metrics.buffer.time.ms", TimeUnit.MILLISECONDS).millis,
       taskBackoffTime = kinesis.getDuration("task.backoff.ms", TimeUnit.MILLISECONDS).millis)
   }
+
+  def externalKafkaConfig(): Map[String, String] = ConfigurationLoader.externalKafkaConfiguration(config)
 }

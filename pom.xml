@@ -8,10 +8,10 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>haystack-span-decorators</module>
         <module>commons</module>
         <module>kinesis</module>
         <module>http</module>
-        <module>decorator</module>
     </modules>
 
     <scm>

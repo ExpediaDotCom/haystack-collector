@@ -24,8 +24,8 @@ import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
-import decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
-import loader.ExternalSpanDecoratorLoader
+import com.expedia.www.haystack.span.decorators.loader.ExternalSpanDecoratorLoader
+import com.expedia.www.haystack.span.decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
@@ -65,7 +65,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
   }
 
   private def getTagConfig(): util.Map[String, String] = {
-    util.Map[String, String]
+    new util.HashMap[String, String]()
   }
 
   override def close(): Unit = {

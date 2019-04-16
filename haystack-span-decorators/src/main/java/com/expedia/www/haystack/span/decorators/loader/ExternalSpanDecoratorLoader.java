@@ -1,6 +1,6 @@
-package loader;
+package com.expedia.www.haystack.span.decorators.loader;
 
-import decorators.SpanDecorator;
+import com.expedia.www.haystack.span.decorators.SpanDecorator;
 import org.slf4j.Logger;
 
 import java.util.Iterator;
@@ -33,12 +33,12 @@ public class ExternalSpanDecoratorLoader {
         try {
             final Iterator<SpanDecorator> spanDecoratorIterator = loader.iterator();
             if (!spanDecoratorIterator.hasNext()) {
-                logger.error("No external span decorators found");
+                logger.error("No external span com.expedia.www.haystack.span.decorators found");
             } else {
                 spanDecorator = spanDecoratorIterator.next();
             }
         } catch (Exception ex) {
-            logger.error("Unable to load the external span decorators {}", ex);
+            logger.error("Unable to load the external span com.expedia.www.haystack.span.decorators {}", ex);
         }
 
         return spanDecorator;

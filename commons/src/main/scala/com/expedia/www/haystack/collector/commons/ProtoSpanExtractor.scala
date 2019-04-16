@@ -34,10 +34,9 @@ import com.expedia.www.haystack.collector.commons.config.ExtractorConfiguration
 import com.expedia.www.haystack.collector.commons.config.Format
 import com.expedia.www.haystack.collector.commons.record.KeyValueExtractor
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
-import com.expedia.www.haystack.collector.commons.transformers.AdditionalTagsSpanDecorator
+import com.expedia.www.haystack.span.decorators.SpanDecorator
+
 import com.google.protobuf.util.JsonFormat
-import decorators.SpanDecorator
-import loader.ExternalSpanDecoratorLoader
 import org.slf4j.Logger
 
 import scala.util.Failure
@@ -164,7 +163,9 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
 
   def updateSpan(span: Span): Span = {
     var tempSpan = span
-    listSpanDecorator.foreach(decorator => {tempSpan = decorator.decorate(tempSpan)})
+    listSpanDecorator.foreach(decorator => {
+      tempSpan = decorator.decorate(tempSpan)
+    })
     tempSpan
   }
 }
