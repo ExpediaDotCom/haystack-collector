@@ -173,8 +173,13 @@ object ConfigurationLoader {
 
   def additionalTagsConfiguration(config: Config): Map[String, String] = {
     val additionalTagsConfig = config.getConfig("additionalTagsConfig")
-    additionalTagsConfig.entrySet().foldRight(Map[String, String]())((t, tMap) => {
+    val additionalTags = additionalTagsConfig.entrySet().foldRight(Map[String, String]())((t, tMap) => {
       tMap + (t.getKey -> t.getValue.unwrapped().toString)
     })
+    if (!additionalTags.contains("TENANT-ID")) {
+      additionalTags + ("TENANT-ID" -> "shared")
+    } else {
+      additionalTags
+    }
   }
 }
