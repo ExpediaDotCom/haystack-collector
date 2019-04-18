@@ -26,13 +26,16 @@ import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisCon
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 import com.expedia.www.haystack.span.decorators.loader.ExternalSpanDecoratorLoader
 import com.expedia.www.haystack.span.decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
+import collection.JavaConverters._
+
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
 
 class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
                              kinesisConsumerConfig: KinesisConsumerConfiguration,
-                             extractorConfiguration: ExtractorConfiguration)
+                             extractorConfiguration: ExtractorConfiguration,
+                             additionalTagsConfig: Map[String, String])
   extends AutoCloseable with MetricsSupport {
 
   private val LOGGER = LoggerFactory.getLogger(classOf[KinesisToKafkaPipeline])
@@ -59,8 +62,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
       tempList = tempList.::(externalSpanDecorator)
     }
 
-    val tagConfig: util.Map[String, String] = getTagConfig()
-    val additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator(tagConfig)
+    val additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator(additionalTagsConfig.asJava, LOGGER)
     tempList.::(additionalTagsSpanDecorator)
   }
 

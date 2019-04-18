@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
-import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExtractorConfiguration, KafkaProduceConfiguration}
+import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExtractorConfiguration, KafkaProduceConfiguration, Tenant}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 
 import scala.concurrent.duration._
@@ -61,4 +61,8 @@ object ProjectConfiguration {
   }
 
   def externalKafkaConfig(): Map[String, String] = ConfigurationLoader.externalKafkaConfiguration(config)
+
+  def tenantConfig(): Tenant = ConfigurationLoader.tenantConfiguration(config)
+
+  def additionalTagConfig(): Map[String, String] = ConfigurationLoader.additionalTagsConfiguration(config)
 }

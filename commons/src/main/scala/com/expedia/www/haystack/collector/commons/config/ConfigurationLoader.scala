@@ -161,4 +161,20 @@ object ConfigurationLoader {
 
     mapTenantIdKafkaBrokers
   }
+
+  def tenantConfiguration(config: Config): Tenant = {
+    val tenantConfig = config.getConfig("tenantConfig")
+    Tenant(tenantConfig.getInt("id"),
+      tenantConfig.getString("name"),
+      tenantConfig.getBoolean("isShared"),
+      tenantConfig.getStringList("ingestionTypes").toList,
+      tenantConfig.getObject("tags").asInstanceOf[Map[String, String]])
+  }
+
+  def additionalTagsConfiguration(config: Config): Map[String, String] = {
+    val additionalTagsConfig = config.getConfig("additionalTagsConfig")
+    additionalTagsConfig.entrySet().foldRight(Map[String, String]())((t, tMap) => {
+      tMap + (t.getKey -> t.getValue.unwrapped().toString)
+    })
+  }
 }
