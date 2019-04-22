@@ -124,12 +124,19 @@ object ConfigurationLoader {
     val props = new Properties()
 
     val kafka = config.getConfig("kafka.producer")
+    val tenantIdToBootstrapServerMap = externalKafkaConfiguration(config)
 
     kafka.getConfig("props").entrySet() foreach {
       kv => {
         props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
       }
     }
+
+    val mapTenantIdToKafkaConfiguration: Map[String, KafkaProduceConfiguration] = Map()
+    tenantIdToBootstrapServerMap.foreach(p => {
+      val tempProps = props
+      mapTenantIdToKafkaConfiguration + (p._1 -> props)
+    })
 
     props.put(KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
     props.put(VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
@@ -163,7 +170,7 @@ object ConfigurationLoader {
   }
 
   def tenantConfiguration(config: Config): Tenant = {
-    val tenantConfig = config.getConfig("tenantConfig")
+    val tenantConfig = config.getConfig("tenant")
     Tenant(tenantConfig.getInt("id"),
       tenantConfig.getString("name"),
       tenantConfig.getBoolean("isShared"),
@@ -172,7 +179,7 @@ object ConfigurationLoader {
   }
 
   def additionalTagsConfiguration(config: Config): Map[String, String] = {
-    val additionalTagsConfig = config.getConfig("additionalTagsConfig")
+    val additionalTagsConfig = config.getConfig("additionaltags")
     val additionalTags = additionalTagsConfig.entrySet().foldRight(Map[String, String]())((t, tMap) => {
       tMap + (t.getKey -> t.getValue.unwrapped().toString)
     })
