@@ -27,6 +27,11 @@ kinesis {
     retry.interval.ms = 250
   }
 
+  dynamodb {
+      readThroughput = ${dynamodb_read_throughput}
+      writeThroughput = ${dynamodb_write_throughput}
+    }
+
   task.backoff.ms = 200
   max.records.read = 2000
   idle.time.between.reads.ms = 500

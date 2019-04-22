@@ -22,6 +22,8 @@ module "kinesis-span-collector" {
   memory_limit = "${var.collector["kinesis_span_collector_memory_limit"]}"
   jvm_memory_limit = "${var.collector["kinesis_span_collector_jvm_memory_limit"]}"
   app_name = "${var.collector["kinesis_span_collector_app_name"]}"
+  dynamodb_read_throughput = "${var.collector["kinesis_span_collector_dynamodb_read_thoroughput"]}"
+  dynamodb_write_throughput = "${var.collector["kinesis_span_collector_dynamodb_write_thoroughput"]}"
 }
 
 module "http-span-collector" {

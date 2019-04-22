@@ -18,6 +18,8 @@ variable "cpu_request"{}
 variable "cpu_limit"{}
 variable "app_name"{ default = "kinesis-span-collector" }
 variable "env_vars" {}
+variable "dynamodb_read_throughput" {}
+variable "dynamodb_write_throughput" {}
 
 variable "termination_grace_period" {
   default = 30
