@@ -26,10 +26,10 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.expedia.www.haystack.collector.commons.sink.RecordSink
+import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.RecordProcessor
 import org.easymock.EasyMock

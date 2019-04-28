@@ -18,7 +18,7 @@
 package com.expedia.www.haystack.http.span.collector
 
 import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExtractorConfiguration, KafkaProduceConfiguration}
-import com.expedia.www.haystack.http.span.collector.authenticator.{NoopAuthenticator, Authenticator}
+import com.expedia.www.haystack.http.span.collector.authenticator.{Authenticator, NoopAuthenticator}
 import com.typesafe.config.Config
 
 import scala.reflect.ClassTag

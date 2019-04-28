@@ -17,8 +17,6 @@
 
 package com.expedia.www.haystack.http.span.collector
 
-import java.util
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._

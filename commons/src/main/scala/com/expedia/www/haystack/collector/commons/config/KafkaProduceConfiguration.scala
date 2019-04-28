@@ -20,3 +20,5 @@ package com.expedia.www.haystack.collector.commons.config
 import java.util.Properties
 
 case class KafkaProduceConfiguration(topic: String, props: Properties)
+
+case class ExternalKafkaConfiguration(tagKey: String, tagValue: String, kafkaProduceConfiguration: KafkaProduceConfiguration)

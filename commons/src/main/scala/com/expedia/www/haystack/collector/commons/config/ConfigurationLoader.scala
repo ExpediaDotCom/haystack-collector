@@ -20,6 +20,7 @@ package com.expedia.www.haystack.collector.commons.config
 import java.io.File
 import java.util.Properties
 
+import com.expedia.www.haystack.span.decorators.loader.PluginConfiguration
 import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueType}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
@@ -124,19 +125,12 @@ object ConfigurationLoader {
     val props = new Properties()
 
     val kafka = config.getConfig("kafka.producer")
-    val tenantIdToBootstrapServerMap = externalKafkaConfiguration(config)
 
     kafka.getConfig("props").entrySet() foreach {
       kv => {
         props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
       }
     }
-
-    val mapTenantIdToKafkaConfiguration: Map[String, KafkaProduceConfiguration] = Map()
-    tenantIdToBootstrapServerMap.foreach(p => {
-      val tempProps = props
-      mapTenantIdToKafkaConfiguration + (p._1 -> props)
-    })
 
     props.put(KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
     props.put(VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
@@ -155,27 +149,21 @@ object ConfigurationLoader {
     ExtractorConfiguration(outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO)
   }
 
-  def externalKafkaConfiguration(config: Config): Map[String, String] = {
+  def externalKafkaConfiguration(config: Config): List[ExternalKafkaConfiguration] = {
     var mapTenantIdKafkaBrokers: Map[String, String] = Map()
 
-    val kafkaProducerConfig: String = config.getString("external.kafka.endpoints")
-
-    ConfigFactory.parseString(kafkaProducerConfig).entrySet() foreach {
-      kv => {
-        mapTenantIdKafkaBrokers = mapTenantIdKafkaBrokers + (kv.getKey -> kv.getValue.toString)
+    val kafkaProducerConfig: List[Config] = config.getConfigList("external.kafka").asScala.toList
+    kafkaProducerConfig.map(cfg => {
+      val props = new Properties()
+      cfg.getConfig("config.props").entrySet() foreach {
+        kv => {
+          props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
+        }
       }
-    }
-
-    mapTenantIdKafkaBrokers
-  }
-
-  def tenantConfiguration(config: Config): Tenant = {
-    val tenantConfig = config.getConfig("tenant")
-    Tenant(tenantConfig.getInt("id"),
-      tenantConfig.getString("name"),
-      tenantConfig.getBoolean("isShared"),
-      tenantConfig.getStringList("ingestionTypes").toList,
-      tenantConfig.getObject("tags").asInstanceOf[Map[String, String]])
+      ExternalKafkaConfiguration(cfg.getString("tag.key"),
+        cfg.getString("tag.value"),
+        KafkaProduceConfiguration(cfg.getString("config.topic"), props))
+    })
   }
 
   def additionalTagsConfiguration(config: Config): Map[String, String] = {
@@ -183,10 +171,15 @@ object ConfigurationLoader {
     val additionalTags = additionalTagsConfig.entrySet().foldRight(Map[String, String]())((t, tMap) => {
       tMap + (t.getKey -> t.getValue.unwrapped().toString)
     })
-    if (!additionalTags.contains("TENANT-ID")) {
-      additionalTags + ("TENANT-ID" -> "shared")
-    } else {
-      additionalTags
-    }
+    additionalTags
+  }
+
+  def pluginConfiguration(config: Config): PluginConfiguration = {
+    val pluginConfig = config.getConfig("plugin")
+    PluginConfiguration(pluginConfig.getString("directory"),
+      pluginConfig.getString("jar.name"),
+      pluginConfig.getString("name"),
+      pluginConfig.getConfig("config")
+    )
   }
 }

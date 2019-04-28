@@ -19,23 +19,24 @@ package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
 import java.util
 
-import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, KafkaProduceConfiguration}
+import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
+import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
-import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
-import com.expedia.www.haystack.span.decorators.loader.ExternalSpanDecoratorLoader
+import com.expedia.www.haystack.span.decorators.loader.{PluginConfiguration, SpanDecoratorPluginLoader}
 import com.expedia.www.haystack.span.decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
-import collection.JavaConverters._
-
 import org.slf4j.LoggerFactory
 
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
                              kinesisConsumerConfig: KinesisConsumerConfiguration,
                              extractorConfiguration: ExtractorConfiguration,
-                             additionalTagsConfig: Map[String, String])
+                             additionalTagsConfig: Map[String, String],
+                             pluginConfiguration: PluginConfiguration
+                            )
   extends AutoCloseable with MetricsSupport {
 
   private val LOGGER = LoggerFactory.getLogger(classOf[KinesisToKafkaPipeline])
@@ -57,7 +58,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
 
   private def getSpanDecoratorList(): List[SpanDecorator] = {
     var tempList: List[SpanDecorator] = List()
-    val externalSpanDecorator = ExternalSpanDecoratorLoader.getInstance(LOGGER).getSpanDecorator
+    val externalSpanDecorator = SpanDecoratorPluginLoader.getInstance(LOGGER, pluginConfiguration).getSpanDecorator
     if (externalSpanDecorator != null) {
       tempList = tempList.::(externalSpanDecorator)
     }

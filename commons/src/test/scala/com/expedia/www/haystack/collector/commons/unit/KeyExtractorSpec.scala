@@ -20,8 +20,8 @@ package com.expedia.www.haystack.collector.commons.unit
 import java.nio.charset.Charset
 
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.google.protobuf.util.JsonFormat
 import org.scalatest.{FunSpec, Matchers}
 import org.slf4j.LoggerFactory

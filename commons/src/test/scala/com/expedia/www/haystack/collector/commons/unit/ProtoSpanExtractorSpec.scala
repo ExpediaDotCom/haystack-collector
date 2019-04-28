@@ -1,20 +1,14 @@
 package com.expedia.www.haystack.collector.commons.unit
 
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.DurationIsInvalid
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.OperationNameIsRequired
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.ServiceNameIsRequired
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SpanIdIsRequired
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.StartTimeIsInvalid
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.TraceIdIsRequired
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor._
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
 import org.mockito.Mockito
+import org.mockito.Mockito.verify
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
 import org.slf4j.Logger
-import org.scalatest.mockito.MockitoSugar
-import org.mockito.Mockito.verify
 
 import scala.collection.immutable.ListMap
 
