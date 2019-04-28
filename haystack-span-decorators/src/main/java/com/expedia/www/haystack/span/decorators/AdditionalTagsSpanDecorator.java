@@ -2,6 +2,7 @@ package com.expedia.www.haystack.span.decorators;
 
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
+import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -15,6 +16,11 @@ public class AdditionalTagsSpanDecorator implements SpanDecorator {
     public AdditionalTagsSpanDecorator(Map<String, String> tagConfig, Logger logger) {
         this.tagConfig = tagConfig;
         this.logger = logger;
+    }
+
+    @Override
+    public void init(Config config) {
+
     }
 
     @Override
@@ -39,4 +45,5 @@ public class AdditionalTagsSpanDecorator implements SpanDecorator {
 
         return spanBuilder.build();
     }
+
 }
