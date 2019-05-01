@@ -6,4 +6,5 @@ import com.typesafe.config.Config;
 public interface SpanDecorator {
     public void init(Config config);
     Span decorate(Span span);
+    String name();
 }

@@ -21,4 +21,4 @@ import java.util.Properties
 
 case class KafkaProduceConfiguration(topic: String, props: Properties)
 
-case class ExternalKafkaConfiguration(tagKey: String, tagValue: String, kafkaProduceConfiguration: KafkaProduceConfiguration)
+case class ExternalKafkaConfiguration(tags: Map[String, String], kafkaProduceConfiguration: KafkaProduceConfiguration)

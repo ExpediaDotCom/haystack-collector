@@ -19,13 +19,12 @@ package com.expedia.www.haystack.collector.commons.config
 
 import java.io.File
 import java.util.Properties
-
-import com.expedia.www.haystack.span.decorators.loader.PluginConfiguration
 import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueType}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.slf4j.LoggerFactory
+import com.expedia.www.haystack.span.decorators.plugin.config.PluginConfiguration
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -150,7 +149,6 @@ object ConfigurationLoader {
   }
 
   def externalKafkaConfiguration(config: Config): List[ExternalKafkaConfiguration] = {
-    var mapTenantIdKafkaBrokers: Map[String, String] = Map()
 
     val kafkaProducerConfig: List[Config] = config.getConfigList("external.kafka").asScala.toList
     kafkaProducerConfig.map(cfg => {
@@ -160,8 +158,10 @@ object ConfigurationLoader {
           props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
         }
       }
-      ExternalKafkaConfiguration(cfg.getString("tag.key"),
-        cfg.getString("tag.value"),
+      val tags: Map[String, String] = cfg.getConfig("tags").entrySet().foldRight(Map[String, String]())((t, tMap) => {
+        tMap + (t.getKey -> t.getValue.unwrapped().toString)
+      })
+      ExternalKafkaConfiguration(tags,
         KafkaProduceConfiguration(cfg.getString("config.topic"), props))
     })
   }
@@ -174,12 +174,14 @@ object ConfigurationLoader {
     additionalTags
   }
 
-  def pluginConfiguration(config: Config): PluginConfiguration = {
-    val pluginConfig = config.getConfig("plugin")
-    PluginConfiguration(pluginConfig.getString("directory"),
-      pluginConfig.getString("jar.name"),
-      pluginConfig.getString("name"),
-      pluginConfig.getConfig("config")
-    )
+  def pluginConfigurations(config: Config): List[PluginConfiguration] = {
+    val pluginConfigList = config.getConfigList("plugins")
+    pluginConfigList.map(pluginConfig => {
+      new PluginConfiguration(pluginConfig.getString("directory"),
+        pluginConfig.getString("jar.name"),
+        pluginConfig.getString("name"),
+        pluginConfig.getConfig("config")
+      )
+    }).toList
   }
 }

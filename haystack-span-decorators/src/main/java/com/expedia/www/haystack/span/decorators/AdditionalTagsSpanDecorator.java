@@ -28,6 +28,11 @@ public class AdditionalTagsSpanDecorator implements SpanDecorator {
         return addHaystackMetadataTags(span);
     }
 
+    @Override
+    public String name() {
+        return AdditionalTagsSpanDecorator.class.getName();
+    }
+
     private Span addHaystackMetadataTags(Span span) {
         final Span.Builder spanBuilder = span.toBuilder();
         span.getTagsList().stream().forEach(tag -> {

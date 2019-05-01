@@ -23,8 +23,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionIn
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
-import com.expedia.www.haystack.span.decorators.loader.PluginConfiguration
-import com.typesafe.config.Config
+import com.expedia.www.haystack.span.decorators.plugin.config.PluginConfiguration
 
 import scala.concurrent.duration._
 
@@ -66,5 +65,5 @@ object ProjectConfiguration {
 
   def additionalTagConfig(): Map[String, String] = ConfigurationLoader.additionalTagsConfiguration(config)
 
-  def pluginConfiguration(): PluginConfiguration = ConfigurationLoader.pluginConfiguration(config)
+  def pluginConfiguration(): List[PluginConfiguration] = ConfigurationLoader.pluginConfigurations(config)
 }

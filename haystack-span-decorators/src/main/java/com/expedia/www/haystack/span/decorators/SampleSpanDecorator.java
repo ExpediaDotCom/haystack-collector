@@ -15,4 +15,9 @@ public class SampleSpanDecorator implements SpanDecorator {
     public Span decorate(Span span) {
         return span;
     }
+
+    @Override
+    public String name() {
+        return SampleSpanDecorator.class.getName();
+    }
 }

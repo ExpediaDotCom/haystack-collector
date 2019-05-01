@@ -42,7 +42,7 @@ object WebServer extends App with MetricsSupport {
   val LOGGER = LoggerFactory.getLogger(WebServer.getClass)
 
   // setup kafka sink
-  private val kafkaSink = new KafkaRecordSink(ProjectConfiguration.kafkaProducerConfig())
+  private val kafkaSink = new KafkaRecordSink(ProjectConfiguration.kafkaProducerConfig(), ProjectConfiguration.externalKafkaConfig())
   private val kvExtractor = new ProtoSpanExtractor(ProjectConfiguration.extractorConfig(),
     LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List[SpanDecorator]())
 

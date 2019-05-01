@@ -17,7 +17,7 @@
 
 package com.expedia.www.haystack.http.span.collector
 
-import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExtractorConfiguration, KafkaProduceConfiguration}
+import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.http.span.collector.authenticator.{Authenticator, NoopAuthenticator}
 import com.typesafe.config.Config
 
@@ -29,6 +29,7 @@ object ProjectConfiguration {
   val config: Config = ConfigurationLoader.loadConfigFileWithEnvOverrides()
 
   def kafkaProducerConfig(): KafkaProduceConfiguration = ConfigurationLoader.kafkaProducerConfig(config)
+  def externalKafkaConfig(): List[ExternalKafkaConfiguration] = ConfigurationLoader.externalKafkaConfiguration(config)
   def extractorConfig(): ExtractorConfiguration = ConfigurationLoader.extractorConfiguration(config)
 
   lazy val httpConfig: HttpConfiguration = {

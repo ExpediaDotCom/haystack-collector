@@ -18,23 +18,27 @@
 package com.expedia.www.haystack.collector.commons.sink.kafka
 
 import com.expedia.www.haystack.collector.commons.MetricsSupport
-import com.expedia.www.haystack.collector.commons.config.KafkaProduceConfiguration
+import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import org.apache.kafka.clients.producer.{ProducerRecord, _}
 import org.slf4j.LoggerFactory
 
-class KafkaRecordSink(config: KafkaProduceConfiguration) extends RecordSink with MetricsSupport {
+class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig: List[ExternalKafkaConfiguration]) extends RecordSink with MetricsSupport {
 
   private val LOGGER = LoggerFactory.getLogger(classOf[KafkaRecordSink])
 
-  private val producer: KafkaProducer[Array[Byte], Array[Byte]] = new KafkaProducer[Array[Byte], Array[Byte]](config.props)
+  private val defaultProducer: KafkaProducer[Array[Byte], Array[Byte]] = new KafkaProducer[Array[Byte], Array[Byte]](config.props)
+  private val listExternalProducer: Map[List[(String, String)], KafkaProducer[Array[Byte], Array[Byte]]] = listExternalKafkaConfig
+    .map(cfg => {
+      cfg.tags.toList -> new KafkaProducer[Array[Byte], Array[Byte]](cfg.kafkaProduceConfiguration.props)
+    }).toMap
 
   override def toAsync(kvPair: KeyValuePair[Array[Byte], Array[Byte]],
                        callback: (KeyValuePair[Array[Byte], Array[Byte]], Exception) => Unit = null): Unit = {
     val kafkaMessage = new ProducerRecord(config.topic, kvPair.key, kvPair.value)
 
-    producer.send(kafkaMessage, new Callback {
+    defaultProducer.send(kafkaMessage, new Callback {
       override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
         if (e != null) {
           LOGGER.error(s"Fail to produce the message to kafka for topic=${config.topic} with reason", e)
@@ -45,9 +49,9 @@ class KafkaRecordSink(config: KafkaProduceConfiguration) extends RecordSink with
   }
 
   override def close(): Unit = {
-    if(producer != null) {
-      producer.flush()
-      producer.close()
+    if(defaultProducer != null) {
+      defaultProducer.flush()
+      defaultProducer.close()
     }
   }
 }

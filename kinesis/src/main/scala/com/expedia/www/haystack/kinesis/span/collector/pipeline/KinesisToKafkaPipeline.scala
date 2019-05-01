@@ -19,12 +19,13 @@ package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
 import java.util
 
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, KafkaProduceConfiguration}
+import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
-import com.expedia.www.haystack.span.decorators.loader.{PluginConfiguration, SpanDecoratorPluginLoader}
+import com.expedia.www.haystack.span.decorators.plugin.config.PluginConfiguration
+import com.expedia.www.haystack.span.decorators.plugin.loader.SpanDecoratorPluginLoader
 import com.expedia.www.haystack.span.decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
 import org.slf4j.LoggerFactory
 
@@ -32,6 +33,7 @@ import scala.collection.JavaConverters._
 import scala.util.Try
 
 class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
+                             listExternalKafkaConfig: List[ExternalKafkaConfiguration],
                              kinesisConsumerConfig: KinesisConsumerConfiguration,
                              extractorConfiguration: ExtractorConfiguration,
                              additionalTagsConfig: Map[String, String],
@@ -51,14 +53,14 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
     */
   def run(): Unit = {
     listSpanDecorator = getSpanDecoratorList()
-    kafkaSink = new KafkaRecordSink(kafkaProducerConfig)
+    kafkaSink = new KafkaRecordSink(kafkaProducerConfig, listExternalKafkaConfig)
     consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration, LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), listSpanDecorator), kafkaSink)
     consumer.startWorker()
   }
 
   private def getSpanDecoratorList(): List[SpanDecorator] = {
     var tempList: List[SpanDecorator] = List()
-    val externalSpanDecorator = SpanDecoratorPluginLoader.getInstance(LOGGER, pluginConfiguration).getSpanDecorator
+    val externalSpanDecorator = SpanDecoratorPluginLoader.getInstance(LOGGER, pluginConfiguration).getSpanDecorators()
     if (externalSpanDecorator != null) {
       tempList = tempList.::(externalSpanDecorator)
     }
