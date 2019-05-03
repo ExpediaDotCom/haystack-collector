@@ -19,12 +19,13 @@ package com.expedia.www.haystack.collector.commons.config
 
 import java.io.File
 import java.util.Properties
+
 import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueType}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.slf4j.LoggerFactory
-import com.expedia.www.haystack.span.decorators.plugin.config.PluginConfiguration
+import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -174,14 +175,16 @@ object ConfigurationLoader {
     additionalTags
   }
 
-  def pluginConfigurations(config: Config): List[PluginConfiguration] = {
-    val pluginConfigList = config.getConfigList("plugins")
-    pluginConfigList.map(pluginConfig => {
-      new PluginConfiguration(pluginConfig.getString("directory"),
-        pluginConfig.getString("jar.name"),
-        pluginConfig.getString("name"),
-        pluginConfig.getConfig("config")
-      )
+  def pluginConfigurations(config: Config): Plugin = {
+    val pluginConfig = config.getConfig("plugins")
+    val directory = pluginConfig.getString("directory")
+    val pluginConfigurationsList = pluginConfig.getConfigList("config")
+      .map(config => {
+        new PluginConfiguration(
+          config.getString("name"),
+          config.getConfig("config")
+        )
     }).toList
+    new Plugin(directory, pluginConfigurationsList)
   }
 }

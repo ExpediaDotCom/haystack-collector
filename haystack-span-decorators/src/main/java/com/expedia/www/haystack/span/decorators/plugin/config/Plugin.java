@@ -6,6 +6,11 @@ public class Plugin {
     private String directory;
     private List<PluginConfiguration> pluginConfigurationList;
 
+    public Plugin(String directory, List<PluginConfiguration> pluginConfigurationList) {
+        this.directory = directory;
+        this.pluginConfigurationList = pluginConfigurationList;
+    }
+
     public String getDirectory() {
         return directory;
     }

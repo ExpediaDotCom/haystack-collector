@@ -49,10 +49,12 @@ public class SpanDecoratorPluginLoader {
         try {
             loader.forEach((spanDecorator) -> {
                 final PluginConfiguration validFirstConfig = pluginConfig.getPluginConfigurationList().stream().filter(pluginConfiguration ->
-                        pluginConfiguration.getName().equals(spanDecorator.name())).findFirst().get();
-
-                spanDecorator.init(validFirstConfig.getConfig());
-                spanDecorators.add(spanDecorator);
+                        pluginConfiguration.getName().equals(spanDecorator.name())).findFirst().orElse(null);
+                if (validFirstConfig != null) {
+                    spanDecorator.init(validFirstConfig.getConfig());
+                    spanDecorators.add(spanDecorator);
+                    logger.info("Successfully loaded the plugin ", spanDecorator.name());
+                }
             });
         } catch (Exception ex) {
             logger.error("Unable to load the external span decorators ", ex);
