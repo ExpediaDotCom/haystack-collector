@@ -17,6 +17,7 @@
 
 package com.expedia.www.haystack.collector.commons.sink.kafka
 
+import com.expedia.open.tracing.{Span, Tag}
 import com.expedia.www.haystack.collector.commons.MetricsSupport
 import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
@@ -29,9 +30,12 @@ class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig
   private val LOGGER = LoggerFactory.getLogger(classOf[KafkaRecordSink])
 
   private val defaultProducer: KafkaProducer[Array[Byte], Array[Byte]] = new KafkaProducer[Array[Byte], Array[Byte]](config.props)
-  private val listExternalProducer: Map[List[(String, String)], KafkaProducer[Array[Byte], Array[Byte]]] = listExternalKafkaConfig
+  private val listExternalProducers: Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])] = listExternalKafkaConfig
     .map(cfg => {
-      cfg.tags.toList -> new KafkaProducer[Array[Byte], Array[Byte]](cfg.kafkaProduceConfiguration.props)
+      cfg.tags.toList -> (
+        cfg.kafkaProduceConfiguration.topic,
+        new KafkaProducer[Array[Byte], Array[Byte]](cfg.kafkaProduceConfiguration.props)
+      )
     }).toMap
 
   override def toAsync(kvPair: KeyValuePair[Array[Byte], Array[Byte]],
@@ -45,6 +49,31 @@ class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig
         }
         if(callback != null) callback(kvPair, e)
       }
+    })
+
+    getMatchingProducers(listExternalProducers, Span.parseFrom(kvPair.value)).foreach(producer => {
+      val tempKafkaMessage = new ProducerRecord(producer._2._1, kvPair.key, kvPair.value)
+      producer._2._2.send(tempKafkaMessage, new Callback {
+        override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
+          if (e != null) {
+            LOGGER.error(s"Fail to produce the message to kafka for topic=${producer._2._1} with reason", e)
+          }
+          if(callback != null) callback(kvPair, e)
+        }
+      })
+    })
+  }
+
+  def getMatchingProducers(listProducers: Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])],
+                           span: Span): Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])] = {
+
+    val tagList = span.getTagsList
+    listProducers.filter(p => {
+      p._1.forall(tag => {
+        tagList.contains(
+          Tag.newBuilder().setKey(tag._1).setVStr(tag._2).build()
+        )
+      })
     })
   }
 
