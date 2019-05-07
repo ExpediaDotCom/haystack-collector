@@ -64,7 +64,7 @@ class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig
     })
   }
 
-  def getMatchingProducers(listProducers: Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])],
+  private def getMatchingProducers(listProducers: Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])],
                            span: Span): Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])] = {
 
     val tagList = span.getTagsList
