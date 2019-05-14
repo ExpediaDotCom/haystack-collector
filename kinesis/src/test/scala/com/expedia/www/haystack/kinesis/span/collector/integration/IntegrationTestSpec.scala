@@ -38,7 +38,7 @@ class IntegrationTestSpec extends WordSpec with GivenWhenThen with Matchers with
       override def run(): Unit = App.main(null)
     })
     // wait for few sec to let app start
-    Thread.sleep(15000)
+    Thread.sleep(60000)
   }
 
   override def afterAll(): Unit = {

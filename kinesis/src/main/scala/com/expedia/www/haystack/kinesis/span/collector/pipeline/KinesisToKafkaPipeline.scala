@@ -60,17 +60,16 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
 
   private def getSpanDecoratorList(): List[SpanDecorator] = {
     var tempList: List[SpanDecorator] = List()
-    val externalSpanDecorators: List[SpanDecorator] = SpanDecoratorPluginLoader.getInstance(LOGGER, pluginConfig).getSpanDecorators().asScala.toList
-    if (externalSpanDecorators != null) {
-      tempList = tempList.++:(externalSpanDecorators)
+    if (pluginConfig != null) {
+      val externalSpanDecorators: List[SpanDecorator] = SpanDecoratorPluginLoader.getInstance(LOGGER, pluginConfig).getSpanDecorators().asScala.toList
+      if (externalSpanDecorators != null) {
+        tempList = tempList.++:(externalSpanDecorators)
+      }
     }
+
 
     val additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator(additionalTagsConfig.asJava, LOGGER)
     tempList.::(additionalTagsSpanDecorator)
-  }
-
-  private def getTagConfig(): util.Map[String, String] = {
-    new util.HashMap[String, String]()
   }
 
   override def close(): Unit = {

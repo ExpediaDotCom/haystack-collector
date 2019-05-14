@@ -150,6 +150,9 @@ object ConfigurationLoader {
   }
 
   def externalKafkaConfiguration(config: Config): List[ExternalKafkaConfiguration] = {
+    if (!config.hasPath("external.kafka")) {
+      return List[ExternalKafkaConfiguration]()
+    }
 
     val kafkaProducerConfig: List[Config] = config.getConfigList("external.kafka").asScala.toList
     kafkaProducerConfig.map(cfg => {
@@ -168,6 +171,9 @@ object ConfigurationLoader {
   }
 
   def additionalTagsConfiguration(config: Config): Map[String, String] = {
+    if (!config.hasPath("additionaltags")) {
+      return Map[String, String]()
+    }
     val additionalTagsConfig = config.getConfig("additionaltags")
     val additionalTags = additionalTagsConfig.entrySet().foldRight(Map[String, String]())((t, tMap) => {
       tMap + (t.getKey -> t.getValue.unwrapped().toString)
@@ -176,6 +182,9 @@ object ConfigurationLoader {
   }
 
   def pluginConfigurations(config: Config): Plugin = {
+    if (!config.hasPath("plugins")) {
+      return null
+    }
     val pluginConfig = config.getConfig("plugins")
     val directory = pluginConfig.getString("directory")
     val pluginConfigurationsList = pluginConfig.getConfigList("config")

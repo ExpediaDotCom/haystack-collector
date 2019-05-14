@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AdditionalTagsSpanDecorator implements SpanDecorator {
 
@@ -35,17 +36,15 @@ public class AdditionalTagsSpanDecorator implements SpanDecorator {
 
     private Span addHaystackMetadataTags(Span span) {
         final Span.Builder spanBuilder = span.toBuilder();
-        span.getTagsList().stream().forEach(tag -> {
-            try {
-                final String tagValue = tagConfig.get(tag.getKey());
-                if (tagValue != null && StringUtils.isEmpty(tag.getVStr())) {
-                    spanBuilder.addTags(Tag.newBuilder().setKey(tag.getKey())
-                            .setVStr(tagValue).build());
-                }
-            } catch (Exception ex) {
-                logger.debug("No matching tag found in tagConfig for this tag");
-            }
 
+        final Map<String, String> spanTags = span.getTagsList().stream()
+                .collect(Collectors.toMap(Tag::getKey, Tag::getVStr));
+
+        tagConfig.forEach((k, v) -> {
+            final String tagValue = spanTags.getOrDefault(k, null);
+            if (StringUtils.isEmpty(tagValue)) {
+                spanBuilder.addTags(Tag.newBuilder().setKey(k).setVStr(v).build());
+            }
         });
 
         return spanBuilder.build();
