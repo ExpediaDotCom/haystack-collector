@@ -19,7 +19,9 @@ package com.expedia.www.haystack.kinesis.span.collector.unit.tests
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
+import com.expedia.www.haystack.collector.commons.config.ExternalKafkaConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
+import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.scalatest.{FunSpec, Matchers}
 
@@ -50,6 +52,20 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
       val kafka = project.kafkaProducerConfig()
       kafka.topic shouldEqual "proto-spans"
       kafka.props.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG) shouldEqual "kafkasvc:9092"
+    }
+
+    it("should load the external kafka config from the base.conf") {
+      val externalKafka: List[ExternalKafkaConfiguration] = project.externalKafkaConfig()
+      externalKafka(0).tags.get("X-HAYSTACK-SPAN-OWNER").get shouldEqual("OWNER1")
+      externalKafka(0).kafkaProduceConfiguration.topic shouldEqual("exTopic1")
+      externalKafka(0).kafkaProduceConfiguration.props.getProperty("bootstrap.servers") shouldEqual("kafkasvc:9092")
+    }
+
+    it("should load the plugins config from the base.conf") {
+      val plugin: Plugin = project.pluginConfiguration()
+      plugin.getDirectory shouldEqual("/")
+      plugin.getPluginConfigurationList.get(0).getName shouldEqual("S1")
+      plugin.getPluginConfigurationList.get(0).getConfig.getString("sample-key") shouldEqual("sample-value")
     }
 
     it("should load the health status file") {

@@ -18,14 +18,15 @@
 package com.expedia.www.haystack.collector.commons.config
 
 import java.io.File
+import java.util
 import java.util.Properties
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueType}
+import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
+import com.typesafe.config._
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.slf4j.LoggerFactory
-import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -154,20 +155,21 @@ object ConfigurationLoader {
       return List[ExternalKafkaConfiguration]()
     }
 
-    val kafkaProducerConfig: List[Config] = config.getConfigList("external.kafka").asScala.toList
-    kafkaProducerConfig.map(cfg => {
+    val kafkaProducerConfig: ConfigObject = config.getObject("external.kafka")
+    kafkaProducerConfig.unwrapped().map(c => {
       val props = new Properties()
-      cfg.getConfig("config.props").entrySet() foreach {
+      val cfg = ConfigFactory.parseMap(c._2.asInstanceOf[util.HashMap[String, Object]])
+      val topic = cfg.getString("config.topic")
+      val tags =  cfg.getConfig("tags").entrySet().foldRight(Map[String, String]())((t, tMap) => {
+        tMap + (t.getKey -> t.getValue.unwrapped().toString)
+      })
+      val temp = cfg.getConfig("config.props").entrySet() foreach {
         kv => {
           props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
         }
       }
-      val tags: Map[String, String] = cfg.getConfig("tags").entrySet().foldRight(Map[String, String]())((t, tMap) => {
-        tMap + (t.getKey -> t.getValue.unwrapped().toString)
-      })
-      ExternalKafkaConfiguration(tags,
-        KafkaProduceConfiguration(cfg.getString("config.topic"), props))
-    })
+      ExternalKafkaConfiguration(tags, KafkaProduceConfiguration(topic, props))
+    }).toList
   }
 
   def additionalTagsConfiguration(config: Config): Map[String, String] = {
@@ -185,14 +187,13 @@ object ConfigurationLoader {
     if (!config.hasPath("plugins")) {
       return null
     }
-    val pluginConfig = config.getConfig("plugins")
-    val directory = pluginConfig.getString("directory")
-    val pluginConfigurationsList = pluginConfig.getConfigList("config")
-      .map(config => {
-        new PluginConfiguration(
-          config.getString("name"),
-          config.getConfig("config")
-        )
+    val directory = config.getString("plugins.directory")
+    val pluginConfigurationsList = config.getObject("plugins").unwrapped().filter(c => !"directory".equals(c._1)).map(c => {
+      val pluginConfig = ConfigFactory.parseMap(c._2.asInstanceOf[util.HashMap[String, Object]])
+      new PluginConfiguration(
+        pluginConfig.getString("name"),
+        pluginConfig.getConfig("config")
+      )
     }).toList
     new Plugin(directory, pluginConfigurationsList)
   }
