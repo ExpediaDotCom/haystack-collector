@@ -24,8 +24,8 @@ import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
-import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 import com.expedia.www.haystack.span.decorators.plugin.loader.SpanDecoratorPluginLoader
+import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 import com.expedia.www.haystack.span.decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
 import org.slf4j.LoggerFactory
 

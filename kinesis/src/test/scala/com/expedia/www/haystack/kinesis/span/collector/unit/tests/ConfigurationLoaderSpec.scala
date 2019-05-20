@@ -56,8 +56,8 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
 
     it("should load the external kafka config from the base.conf") {
       val externalKafka: List[ExternalKafkaConfiguration] = project.externalKafkaConfig()
-      externalKafka(0).tags.get("X-HAYSTACK-SPAN-OWNER").get shouldEqual("OWNER1")
-      externalKafka(0).kafkaProduceConfiguration.topic shouldEqual("exTopic1")
+      externalKafka(0).tags.get("X-HAYSTACK-ADDITIONAL-TAG").get shouldEqual("ADDITIONAL-TAG")
+      externalKafka(0).kafkaProduceConfiguration.topic shouldEqual("external-proto-spans")
       externalKafka(0).kafkaProduceConfiguration.props.getProperty("bootstrap.servers") shouldEqual("kafkasvc:9092")
     }
 

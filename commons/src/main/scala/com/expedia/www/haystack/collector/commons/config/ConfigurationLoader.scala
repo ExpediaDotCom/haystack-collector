@@ -168,6 +168,10 @@ object ConfigurationLoader {
           props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
         }
       }
+
+      props.put(KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
+      props.put(VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
+
       ExternalKafkaConfiguration(tags, KafkaProduceConfiguration(topic, props))
     }).toList
   }

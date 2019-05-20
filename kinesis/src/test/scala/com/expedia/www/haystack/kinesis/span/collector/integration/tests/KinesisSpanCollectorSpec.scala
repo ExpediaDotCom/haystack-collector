@@ -17,7 +17,8 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.integration.tests
 
-import com.expedia.open.tracing.Span
+import com.expedia.open.tracing.{Span, Tag}
+import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.integration._
 
 import scala.concurrent.duration._
@@ -60,10 +61,49 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
 
       Then("it should be pushed to kafka with partition key as its trace id")
       val records = readRecordsFromKafka(4, 5.seconds)
+      val externalrecords = readRecordsFromExternalKafka(0, 10.seconds)
+      externalrecords.size shouldEqual 0
       records should not be empty
+
       val spans = records.map(Span.parseFrom)
       spans.map(_.getTraceId).toSet should contain allOf("trace-id-1", "trace-id-2")
       spans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
+    }
+
+    "read valid spans from kinesis and store individual spans in kafka and external kafka" in {
+
+      Given("valid spans")
+      val tags: List[Tag] = List(
+        Tag.newBuilder().setKey("X-HAYSTACK-SPAN-OWNER").setVStr("OWNER1").build(),
+        Tag.newBuilder().setKey("X-HAYSTACK-SPAN-SENDER").setVStr("SENDER1").build()
+      )
+      val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").setOperationName("operation")
+        .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros)
+        .addTags(tags(0)).addTags(tags(1)).build().toByteArray
+      val span_2 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-2").setOperationName("operation")
+        .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros)
+        .addTags(tags(0)).addTags(tags(1)).build().toByteArray
+      val span_3 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-3").setOperationName("operation")
+        .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros)
+        .addTags(tags(0)).addTags(tags(1)).build().toByteArray
+      val span_4 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-4").setOperationName("operation")
+        .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros)
+        .addTags(tags(0)).addTags(tags(1)).build().toByteArray
+
+      When("the span is sent to kinesis")
+      produceRecordsToKinesis(List(span_1, span_2, span_3, span_4))
+
+      Then("it should be pushed to default kafka and external kafka with partition key as its trace id")
+      val records = readRecordsFromKafka(4, 5.seconds)
+      val externalrecords = readRecordsFromExternalKafka(4 * ProjectConfiguration.externalKafkaConfig().size, 10.seconds)
+      externalrecords should not be empty
+      records should not be empty
+      val spans = records.map(Span.parseFrom)
+      val externalSpans = externalrecords.map(Span.parseFrom)
+      spans.map(_.getTraceId).toSet should contain allOf("trace-id-1", "trace-id-2")
+      externalSpans.map(_.getTraceId).toSet should contain allOf("trace-id-1", "trace-id-2")
+      spans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
+      externalSpans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
     }
   }
 }

@@ -29,6 +29,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.expedia.www</groupId>
+            <artifactId>haystack-span-decorators</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
@@ -105,6 +111,8 @@
                             <environmentVariables>
                                 <HAYSTACK_OVERRIDES_CONFIG_PATH>/src/kinesis/build/integration-tests/app-integration-test.conf</HAYSTACK_OVERRIDES_CONFIG_PATH>
                                 <AWS_ACCESS_KEY>fake</AWS_ACCESS_KEY>
+                                <AWS_CBOR_DISABLE>1</AWS_CBOR_DISABLE>
+                                <AWS_SECRET_KEY>fake</AWS_SECRET_KEY>
                             </environmentVariables>
                         </configuration>
                     </execution>

@@ -7,7 +7,6 @@ import com.expedia.www.haystack.span.decorators.plugin.config.PluginConfiguratio
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -18,20 +17,9 @@ public class SpanDecoratorPluginLoader {
     private Logger logger;
     private Plugin pluginConfig;
     private static SpanDecoratorPluginLoader spanDecoratorPluginLoader;
-    private final ServiceLoader<SpanDecorator> loader;
-
-    private SpanDecoratorPluginLoader() {
-        URLClassLoader urlClassLoader = null;
-        try {
-            urlClassLoader = new URLClassLoader(new URL[] {new File(pluginConfig.getDirectory() + "/").toURI().toURL()});
-        } catch (MalformedURLException ex) {
-            logger.error("Could not create the class loader for finding jar ", ex);
-        }
-        loader = ServiceLoader.load(SpanDecorator.class, urlClassLoader);
-    }
+    private ServiceLoader<SpanDecorator> loader;
 
     private SpanDecoratorPluginLoader(Logger logger, Plugin pluginConfig) {
-        this();
         this.logger = logger;
         this.pluginConfig = pluginConfig;
     }
@@ -40,8 +28,22 @@ public class SpanDecoratorPluginLoader {
         if (spanDecoratorPluginLoader == null) {
             spanDecoratorPluginLoader = new SpanDecoratorPluginLoader(logger, pluginConfig);
         }
+        spanDecoratorPluginLoader.createLoader();
 
         return spanDecoratorPluginLoader;
+    }
+
+    private void createLoader() {
+        try {
+            URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {new File(pluginConfig.getDirectory()
+                    + "multitenancy-span-decorator-0.0.1-SNAPSHOT.jar")
+                    .toURI().toURL()}, SpanDecorator.class.getClassLoader());
+            loader = ServiceLoader.load(SpanDecorator.class, urlClassLoader);
+        } catch (Exception ex) {
+            logger.error("Could not create the class loader for finding jar ", ex);
+        } catch (NoClassDefFoundError ex) {
+            logger.error("Could not find the class ", ex);
+        }
     }
 
     public List<SpanDecorator> getSpanDecorators() {
