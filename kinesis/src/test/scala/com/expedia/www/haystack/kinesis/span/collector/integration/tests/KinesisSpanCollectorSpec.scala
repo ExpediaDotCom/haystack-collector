@@ -105,5 +105,24 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       spans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
       externalSpans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
     }
+
+    "load appropriate span decorator plugin using configuration provided " in {
+
+      Given("Jar file for SAMPLE_SPAN_DECORATOR plugin in kinesis/build directory")
+      val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").setOperationName("operation")
+        .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros).build().toByteArray
+
+      When("the app is initialised")
+      produceRecordsToKinesis(List(span_1))
+
+      Then("the appropriate span decorator plugin should be loaded using spi")
+      val records = readRecordsFromKafka(1, 5.seconds)
+      records should not be empty
+
+      val spans = records.map(Span.parseFrom)
+      spans.map(_.getTraceId).toSet should contain ("trace-id-1")
+      spans.map(_.getSpanId) should contain ("span-id-1")
+      spans(0).getTagsList should contain (Tag.newBuilder().setKey("X-HAYSTACK-PLUGIN-MAPPED-DIVISION").setVStr("SAMPLE").build())
+    }
   }
 }
