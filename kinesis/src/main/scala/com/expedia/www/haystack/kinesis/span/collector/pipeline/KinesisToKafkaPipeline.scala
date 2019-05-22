@@ -21,7 +21,7 @@ import java.util
 
 import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
-import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
+import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor, Utils}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
 import com.expedia.www.haystack.span.decorators.plugin.loader.SpanDecoratorPluginLoader
@@ -52,24 +52,10 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
     * the run is a blocking call. kinesis consumer blocks after spinning off the workers
     */
   def run(): Unit = {
-    listSpanDecorator = getSpanDecoratorList()
+    listSpanDecorator = Utils.getSpanDecoratorList(pluginConfig, additionalTagsConfig, LOGGER)
     kafkaSink = new KafkaRecordSink(kafkaProducerConfig, listExternalKafkaConfig)
     consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration, LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), listSpanDecorator), kafkaSink)
     consumer.startWorker()
-  }
-
-  private def getSpanDecoratorList(): List[SpanDecorator] = {
-    var tempList: List[SpanDecorator] = List()
-    if (pluginConfig != null) {
-      val externalSpanDecorators: List[SpanDecorator] = SpanDecoratorPluginLoader.getInstance(LOGGER, pluginConfig).getSpanDecorators().asScala.toList
-      if (externalSpanDecorators != null) {
-        tempList = tempList.++:(externalSpanDecorators)
-      }
-    }
-
-
-    val additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator(additionalTagsConfig.asJava, LOGGER)
-    tempList.::(additionalTagsSpanDecorator)
   }
 
   override def close(): Unit = {

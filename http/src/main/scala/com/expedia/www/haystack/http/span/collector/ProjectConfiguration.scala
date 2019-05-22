@@ -19,6 +19,7 @@ package com.expedia.www.haystack.http.span.collector
 
 import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.http.span.collector.authenticator.{Authenticator, NoopAuthenticator}
+import com.expedia.www.haystack.span.decorators.plugin.config.Plugin
 import com.typesafe.config.Config
 
 import scala.reflect.ClassTag
@@ -29,8 +30,10 @@ object ProjectConfiguration {
   val config: Config = ConfigurationLoader.loadConfigFileWithEnvOverrides()
 
   def kafkaProducerConfig(): KafkaProduceConfiguration = ConfigurationLoader.kafkaProducerConfig(config)
-  def externalKafkaConfig(): List[ExternalKafkaConfiguration] = ConfigurationLoader.externalKafkaConfiguration(config)
   def extractorConfig(): ExtractorConfiguration = ConfigurationLoader.extractorConfiguration(config)
+  def externalKafkaConfig(): List[ExternalKafkaConfiguration] = ConfigurationLoader.externalKafkaConfiguration(config)
+  def additionalTagConfig(): Map[String, String] = ConfigurationLoader.additionalTagsConfiguration(config)
+  def pluginConfiguration(): Plugin = ConfigurationLoader.pluginConfigurations(config)
 
   lazy val httpConfig: HttpConfiguration = {
     val authenticator = if(config.hasPath("http.authenticator")) {

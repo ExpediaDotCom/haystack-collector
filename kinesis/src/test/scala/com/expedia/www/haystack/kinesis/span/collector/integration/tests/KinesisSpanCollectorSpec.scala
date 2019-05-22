@@ -20,6 +20,9 @@ package com.expedia.www.haystack.kinesis.span.collector.integration.tests
 import com.expedia.open.tracing.{Span, Tag}
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.integration._
+import com.expedia.www.haystack.span.decorators.SpanDecorator
+import com.expedia.www.haystack.span.decorators.plugin.loader.SpanDecoratorPluginLoader
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 
@@ -108,7 +111,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
 
     "load appropriate span decorator plugin using configuration provided " in {
 
-      Given("Jar file for SAMPLE_SPAN_DECORATOR plugin in kinesis/build directory")
+      Given("Jar file for SAMPLE_SPAN_DECORATOR plugin in build/ directory")
       val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").setOperationName("operation")
         .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros).build().toByteArray
 

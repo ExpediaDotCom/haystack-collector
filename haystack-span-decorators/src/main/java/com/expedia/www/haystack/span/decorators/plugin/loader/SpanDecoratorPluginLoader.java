@@ -7,9 +7,11 @@ import com.expedia.www.haystack.span.decorators.plugin.config.PluginConfiguratio
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ServiceLoader;
 
@@ -35,9 +37,12 @@ public class SpanDecoratorPluginLoader {
 
     private void createLoader() {
         try {
-            URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {new File(pluginConfig.getDirectory()
-                    + "multitenancy-span-decorator-0.0.1-SNAPSHOT.jar")
-                    .toURI().toURL()}, SpanDecorator.class.getClassLoader());
+            final File[] pluginFiles = new File(pluginConfig.getDirectory()).listFiles();
+            final List<URL> urls = new ArrayList<>();
+            for (File file : pluginFiles) {
+                urls.add(file.toURI().toURL());
+            }
+            URLClassLoader urlClassLoader = new URLClassLoader(urls.toArray(new URL[0]), SpanDecorator.class.getClassLoader());
             loader = ServiceLoader.load(SpanDecorator.class, urlClassLoader);
         } catch (Exception ex) {
             logger.error("Could not create the class loader for finding jar ", ex);
