@@ -127,7 +127,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       val spans = records.map(Span.parseFrom)
       spans.map(_.getTraceId).toSet should contain ("trace-id-1")
       spans.map(_.getSpanId) should contain ("span-id-1")
-      spans(0).getTagsList should contain (Tag.newBuilder().setKey("X-HAYSTACK-PLUGIN-MAPPED-DIVISION").setVStr("SAMPLE").build())
+      spans(0).getTagsList should contain (Tag.newBuilder().setKey("X-HAYSTACK-PLUGIN-SPAN-DECORATOR").setVStr("SAMPLE-TAG").build())
     }
   }
 }

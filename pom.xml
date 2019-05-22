@@ -12,6 +12,7 @@
         <module>commons</module>
         <module>kinesis</module>
         <module>http</module>
+        <module>sample-span-decorator</module>
     </modules>
 
     <scm>

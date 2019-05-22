@@ -64,9 +64,9 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
 
     it("should load the plugins config from the base.conf") {
       val plugin: Plugin = project.pluginConfiguration()
-      plugin.getDirectory shouldEqual("build/decorators")
+      plugin.getDirectory shouldEqual("plugins/decorators")
       plugin.getPluginConfigurationList.get(0).getName shouldEqual("SAMPLE_SPAN_DECORATOR")
-      plugin.getPluginConfigurationList.get(0).getConfig.getString("tag.key") shouldEqual("X-HAYSTACK-PLUGIN-MAPPED-DIVISION")
+      plugin.getPluginConfigurationList.get(0).getConfig.getString("tag.key") shouldEqual("X-HAYSTACK-PLUGIN-SPAN-DECORATOR")
     }
 
     it("should load the health status file") {

@@ -45,16 +45,16 @@ trait LocalKafkaConsumer {
 
   private val externalKafkaConsumerMap: Map[String, KafkaConsumer[Array[Byte], Array[Byte]]] = {
     val externalKafkaList: List[ExternalKafkaConfiguration] = ProjectConfiguration.externalKafkaConfig()
-    externalKafkaList.map(c => {
+    externalKafkaList.zipWithIndex.map { case (c, i) => {
       val consumerProperties = new Properties()
-      consumerProperties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "kinesis-to-kafka-test")
+      consumerProperties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, s"kinesis-to-kafka-test-${i}")
       consumerProperties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, c.kafkaProduceConfiguration.props.getProperty("bootstrap.servers"))
       consumerProperties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, classOf[ByteArrayDeserializer].getCanonicalName)
       consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[ByteArrayDeserializer].getCanonicalName)
       val consumer = new KafkaConsumer[Array[Byte], Array[Byte]](consumerProperties)
       consumer.subscribe(List(c.kafkaProduceConfiguration.topic).asJava, new NoOpConsumerRebalanceListener())
       c.kafkaProduceConfiguration.topic -> consumer
-    }).toMap
+    }}.toMap
   }
 
   kafkaConsumer.subscribe(List(TestConfiguration.kafkaStreamName).asJava, new NoOpConsumerRebalanceListener())
@@ -112,5 +112,6 @@ trait LocalKafkaConsumer {
 
   def shutdownKafkaConsumer(): Unit = {
     if(kafkaConsumer != null) kafkaConsumer.close()
+    externalKafkaConsumerMap.foreach(c => c._2.close())
   }
 }
