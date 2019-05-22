@@ -18,6 +18,7 @@
 package com.expedia.www.haystack.kinesis.span.collector.integration
 
 import java.util.Properties
+import java.util.stream.Collectors
 
 import com.expedia.www.haystack.collector.commons.config.ExternalKafkaConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
@@ -42,7 +43,7 @@ trait LocalKafkaConsumer {
     new KafkaConsumer[Array[Byte], Array[Byte]](consumerProperties)
   }
 
-  private val externalKafkaConsumerList: List[KafkaConsumer[Array[Byte], Array[Byte]]] = {
+  private val externalKafkaConsumerMap: Map[String, KafkaConsumer[Array[Byte], Array[Byte]]] = {
     val externalKafkaList: List[ExternalKafkaConfiguration] = ProjectConfiguration.externalKafkaConfig()
     externalKafkaList.map(c => {
       val consumerProperties = new Properties()
@@ -52,8 +53,8 @@ trait LocalKafkaConsumer {
       consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[ByteArrayDeserializer].getCanonicalName)
       val consumer = new KafkaConsumer[Array[Byte], Array[Byte]](consumerProperties)
       consumer.subscribe(List(c.kafkaProduceConfiguration.topic).asJava, new NoOpConsumerRebalanceListener())
-      consumer
-    })
+      c.kafkaProduceConfiguration.topic -> consumer
+    }).toMap
   }
 
   kafkaConsumer.subscribe(List(TestConfiguration.kafkaStreamName).asJava, new NoOpConsumerRebalanceListener())
@@ -88,10 +89,10 @@ trait LocalKafkaConsumer {
 
     var waitTimeLeft = maxWait.toMillis
 
-    externalKafkaConsumerList.foreach(externalKafkaConsumer => {
+    externalKafkaConsumerMap.foreach(externalKafkaConsumer => {
       var done = true
       while (done) {
-        externalKafkaConsumer.poll(250).map(rec => {
+        externalKafkaConsumer._2.poll(250).records(externalKafkaConsumer._1).map(rec => {
           received += 1
           records += rec.value()
         })
