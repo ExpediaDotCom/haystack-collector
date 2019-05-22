@@ -100,8 +100,8 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       val records = readRecordsFromKafka(4, 5.seconds)
       val numConsumers = ProjectConfiguration.externalKafkaConfig().size
       val externalrecords = readRecordsFromExternalKafka(4 * numConsumers, (10 * numConsumers).seconds)
-      externalrecords should not be empty
-      records should not be empty
+      externalrecords should equal(4)
+      records should equal(4)
       val spans = records.map(Span.parseFrom)
       val externalSpans = externalrecords.map(Span.parseFrom)
       numConsumers should equal(1)

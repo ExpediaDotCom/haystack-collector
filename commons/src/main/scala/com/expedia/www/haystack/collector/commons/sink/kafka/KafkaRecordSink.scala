@@ -82,5 +82,6 @@ class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig
       defaultProducer.flush()
       defaultProducer.close()
     }
+    listExternalProducers.foreach(p => p._2._2.close())
   }
 }
