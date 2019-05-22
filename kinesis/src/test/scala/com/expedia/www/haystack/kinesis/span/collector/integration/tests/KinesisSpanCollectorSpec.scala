@@ -98,11 +98,13 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
 
       Then("it should be pushed to default kafka and external kafka with partition key as its trace id")
       val records = readRecordsFromKafka(4, 5.seconds)
-      val externalrecords = readRecordsFromExternalKafka(4 * ProjectConfiguration.externalKafkaConfig().size, 10.seconds)
+      val numConsumers = ProjectConfiguration.externalKafkaConfig().size
+      val externalrecords = readRecordsFromExternalKafka(4 * numConsumers, (10 * numConsumers).seconds)
       externalrecords should not be empty
       records should not be empty
       val spans = records.map(Span.parseFrom)
       val externalSpans = externalrecords.map(Span.parseFrom)
+      numConsumers should equal(1)
       spans.map(_.getTraceId).toSet should contain allOf("trace-id-1", "trace-id-2")
       externalSpans.map(_.getTraceId).toSet should contain allOf("trace-id-1", "trace-id-2")
       spans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
