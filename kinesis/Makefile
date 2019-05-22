@@ -9,7 +9,7 @@ docker_build:
 
 prepare_integration_test_env: docker_build
 	#copy plugin jars to test
-	mvn -f ${PWD}/../sample-span-decorator clean package
+	mvn -f ${PWD}/../ clean package -pl sample-span-decorator -am
 	mkdir -p ${PWD}/plugins/decorators
 	cp ${PWD}/../sample-span-decorator/target/sample-span-decorator.jar ${PWD}/plugins/decorators/.
 
@@ -39,7 +39,7 @@ integration_test: prepare_integration_test_env
 		-v ~/.m2:/root/.m2 \
 		-w /src \
 		maven:3.5.0-jdk-8 \
-		mvn scoverage:integration-check -pl kinesis -am
+		mvn package scoverage:integration-check -pl kinesis -am
 
 	# stop all the containers
 	docker-compose -f build/integration-tests/docker-compose.yml -p sandbox stop

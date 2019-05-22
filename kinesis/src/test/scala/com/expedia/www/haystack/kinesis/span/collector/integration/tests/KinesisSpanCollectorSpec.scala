@@ -100,8 +100,8 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       val records = readRecordsFromKafka(4, 5.seconds)
       val numConsumers = ProjectConfiguration.externalKafkaConfig().size
       val externalrecords = readRecordsFromExternalKafka(4 * numConsumers, (10 * numConsumers).seconds)
-      externalrecords should equal(4)
-      records should equal(4)
+      externalrecords.size should equal(4)
+      records.size should equal(4)
       val spans = records.map(Span.parseFrom)
       val externalSpans = externalrecords.map(Span.parseFrom)
       numConsumers should equal(1)
@@ -113,7 +113,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
 
     "load appropriate span decorator plugin using configuration provided " in {
 
-      Given("Jar file for SAMPLE_SPAN_DECORATOR plugin in build/ directory")
+      Given("Jar file for SAMPLE_SPAN_DECORATOR plugin in plugins/decorators directory")
       val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").setOperationName("operation")
         .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros).build().toByteArray
 
