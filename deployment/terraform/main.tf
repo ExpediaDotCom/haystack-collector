@@ -1,10 +1,17 @@
+locals {
+  default_kinesis_stream_name = "${var.kinesis-stream_name}"
+  default_kinesis_stream_region = "${var.kinesis-stream_region}"
+}
+
 module "kinesis-span-collector" {
   source = "kinesis-span-collector"
   image = "expediadotcom/haystack-kinesis-span-collector:${var.collector["version"]}"
   replicas = "${var.collector["kinesis_span_collector_instances"]}"
   enabled = "${var.collector["kinesis_span_collector_enabled"]}"
-  kinesis_stream_name = "${var.collector["kinesis_stream_name"]}"
-  kinesis_stream_region = "${var.collector["kinesis_stream_region"]}"
+
+  kinesis_stream_name = "${var.collector["kinesis_stream_name"] == "" ? local.default_kinesis_stream_name : var.collector["kinesis_stream_name"]}"
+  kinesis_stream_region = "${var.collector["kinesis_stream_region"] == "" ? local.default_kinesis_stream_region : var.collector["kinesis_stream_region"]}"
+
   sts_role_arn = "${var.collector["kinesis_span_collector_sts_role_arn"]}"
   env_vars = "${var.collector["kinesis_span_collector_environment_overrides"]}"
 
