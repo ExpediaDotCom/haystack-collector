@@ -19,7 +19,9 @@ package com.expedia.www.haystack.kinesis.span.collector.unit.tests
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
+import com.expedia.www.haystack.collector.commons.config.ExternalKafkaConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
+import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.scalatest.{FunSpec, Matchers}
 
@@ -27,7 +29,7 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
 
   val project = ProjectConfiguration
 
-  describe("Configuration loader") {
+  describe("Configuration com.expedia.www.haystack.span.loader") {
     it("should load the kinesis config from base.conf") {
       val kinesis = project.kinesisConsumerConfig()
       kinesis.metricsLevel shouldEqual MetricsLevel.NONE
@@ -50,6 +52,21 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
       val kafka = project.kafkaProducerConfig()
       kafka.topic shouldEqual "proto-spans"
       kafka.props.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG) shouldEqual "kafkasvc:9092"
+    }
+
+    it("should load the external kafka config from the base.conf") {
+      val externalKafka: List[ExternalKafkaConfiguration] = project.externalKafkaConfig()
+      externalKafka(0).tags.get("X-HAYSTACK-SPAN-OWNER").get shouldEqual("OWNER1")
+      externalKafka(0).tags.get("X-HAYSTACK-SPAN-SENDER").get shouldEqual("SENDER1")
+      externalKafka(0).kafkaProduceConfiguration.topic shouldEqual("external-proto-spans")
+      externalKafka(0).kafkaProduceConfiguration.props.getProperty("bootstrap.servers") shouldEqual("kafkasvc:9092")
+    }
+
+    it("should load the plugins config from the base.conf") {
+      val plugin: Plugin = project.pluginConfiguration()
+      plugin.getDirectory shouldEqual("plugins/decorators")
+      plugin.getPluginConfigurationList.get(0).getName shouldEqual("SAMPLE_SPAN_DECORATOR")
+      plugin.getPluginConfigurationList.get(0).getConfig.getString("tag.key") shouldEqual("X-HAYSTACK-PLUGIN-SPAN-DECORATOR")
     }
 
     it("should load the health status file") {

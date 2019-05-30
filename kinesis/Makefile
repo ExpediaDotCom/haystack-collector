@@ -8,6 +8,11 @@ docker_build:
 	docker build -t $(DOCKER_IMAGE_NAME) -f build/docker/Dockerfile .
 
 prepare_integration_test_env: docker_build
+	#copy plugin jars to test
+	mvn -f ${PWD}/../ clean package -pl sample-span-decorator -am
+	mkdir -p ${PWD}/plugins/decorators
+	cp ${PWD}/../sample-span-decorator/target/sample-span-decorator.jar ${PWD}/plugins/decorators/.
+
 	docker-compose -f build/integration-tests/docker-compose.yml -p sandbox up -d
 
 	# kafka sometimes take time to start

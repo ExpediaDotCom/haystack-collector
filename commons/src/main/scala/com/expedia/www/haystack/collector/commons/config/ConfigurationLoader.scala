@@ -18,9 +18,11 @@
 package com.expedia.www.haystack.collector.commons.config
 
 import java.io.File
+import java.util
 import java.util.Properties
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueType}
+import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
+import com.typesafe.config._
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerConfig.{KEY_SERIALIZER_CLASS_CONFIG, VALUE_SERIALIZER_CLASS_CONFIG}
 import org.apache.kafka.common.serialization.ByteArraySerializer
@@ -146,5 +148,57 @@ object ConfigurationLoader {
   def extractorConfiguration(config: Config): ExtractorConfiguration = {
     val extractor = config.getConfig("extractor")
     ExtractorConfiguration(outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO)
+  }
+
+  def externalKafkaConfiguration(config: Config): List[ExternalKafkaConfiguration] = {
+    if (!config.hasPath("external.kafka")) {
+      return List[ExternalKafkaConfiguration]()
+    }
+
+    val kafkaProducerConfig: ConfigObject = config.getObject("external.kafka")
+    kafkaProducerConfig.unwrapped().map(c => {
+      val props = new Properties()
+      val cfg = ConfigFactory.parseMap(c._2.asInstanceOf[util.HashMap[String, Object]])
+      val topic = cfg.getString("config.topic")
+      val tags =  cfg.getConfig("tags").entrySet().foldRight(Map[String, String]())((t, tMap) => {
+        tMap + (t.getKey -> t.getValue.unwrapped().toString)
+      })
+      val temp = cfg.getConfig("config.props").entrySet() foreach {
+        kv => {
+          props.setProperty(kv.getKey, kv.getValue.unwrapped().toString)
+        }
+      }
+
+      props.put(KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
+      props.put(VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
+
+      ExternalKafkaConfiguration(tags, KafkaProduceConfiguration(topic, props))
+    }).toList
+  }
+
+  def additionalTagsConfiguration(config: Config): Map[String, String] = {
+    if (!config.hasPath("additionaltags")) {
+      return Map[String, String]()
+    }
+    val additionalTagsConfig = config.getConfig("additionaltags")
+    val additionalTags = additionalTagsConfig.entrySet().foldRight(Map[String, String]())((t, tMap) => {
+      tMap + (t.getKey -> t.getValue.unwrapped().toString)
+    })
+    additionalTags
+  }
+
+  def pluginConfigurations(config: Config): Plugin = {
+    if (!config.hasPath("plugins")) {
+      return null
+    }
+    val directory = config.getString("plugins.directory")
+    val pluginConfigurationsList = config.getObject("plugins").unwrapped().filter(c => !"directory".equals(c._1)).map(c => {
+      val pluginConfig = ConfigFactory.parseMap(c._2.asInstanceOf[util.HashMap[String, Object]])
+      new PluginConfiguration(
+        pluginConfig.getString("name"),
+        pluginConfig.getConfig("config")
+      )
+    }).toList
+    new Plugin(directory, pluginConfigurationsList)
   }
 }

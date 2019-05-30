@@ -20,8 +20,8 @@ package com.expedia.www.haystack.collector.commons.unit
 import java.nio.charset.Charset
 
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.google.protobuf.util.JsonFormat
 import org.scalatest.{FunSpec, Matchers}
 import org.slf4j.LoggerFactory
@@ -37,7 +37,7 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, DurationMicros))
 
       spanMap.foreach(sp => {
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])).extractKeyValuePairs(sp._2.toByteArray)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes
@@ -53,7 +53,7 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, 1))
 
       spanMap.foreach(sp => {
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON), LoggerFactory.getLogger(classOf[ProtoSpanExtractor])).extractKeyValuePairs(sp._2.toByteArray)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes

@@ -8,9 +8,11 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>haystack-span-decorators</module>
         <module>commons</module>
         <module>kinesis</module>
         <module>http</module>
+        <module>sample-span-decorator</module>
     </modules>
 
     <scm>
@@ -93,6 +95,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.expedia.www</groupId>
+                <artifactId>haystack-idl-java</artifactId>
+                <version>1.0.64</version>
+            </dependency>
+
             <!-- protobuf -->
             <dependency>
                 <groupId>com.google.protobuf</groupId>
@@ -198,6 +206,11 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>com.expedia.www</groupId>
+            <artifactId>haystack-idl-java</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>

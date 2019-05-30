@@ -23,23 +23,14 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
 
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.DurationIsInvalid
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.OperationNameIsRequired
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.ServiceNameIsRequired
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SmallestAllowedStartTimeMicros
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.SpanIdIsRequired
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.StartTimeIsInvalid
-import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor.TraceIdIsRequired
-import com.expedia.www.haystack.collector.commons.config.ExtractorConfiguration
-import com.expedia.www.haystack.collector.commons.config.Format
-import com.expedia.www.haystack.collector.commons.record.KeyValueExtractor
-import com.expedia.www.haystack.collector.commons.record.KeyValuePair
+import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor._
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.collector.commons.record.{KeyValueExtractor, KeyValuePair}
+import com.expedia.www.haystack.span.decorators.SpanDecorator
 import com.google.protobuf.util.JsonFormat
 import org.slf4j.Logger
 
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object ProtoSpanExtractor {
   private val DaysInYear1970 = 365
@@ -60,7 +51,7 @@ object ProtoSpanExtractor {
 }
 
 class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
-                         val LOGGER: Logger)
+                         val LOGGER: Logger, spanDecorators: List[SpanDecorator])
   extends KeyValueExtractor with MetricsSupport {
 
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
@@ -141,9 +132,11 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     match {
       case Success(span) =>
         validSpanMeter.mark()
+
+        val updatedSpan = decorateSpan(span)
         val kvPair = extractorConfiguration.outputFormat match {
-          case Format.JSON => KeyValuePair(span.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
-          case Format.PROTO => KeyValuePair(span.getTraceId.getBytes, recordBytes)
+          case Format.JSON => KeyValuePair(updatedSpan.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
+          case Format.PROTO => KeyValuePair(updatedSpan.getTraceId.getBytes, updatedSpan.toByteArray)
         }
         List(kvPair)
 
@@ -155,5 +148,17 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
         }
         Nil
     }
+  }
+
+  private def decorateSpan(span: Span): Span = {
+    if (spanDecorators.isEmpty) {
+      return span
+    }
+
+    var spanBuilder = span.toBuilder
+    spanDecorators.foreach(decorator => {
+      spanBuilder = decorator.decorate(spanBuilder)
+    })
+    spanBuilder.build()
   }
 }
