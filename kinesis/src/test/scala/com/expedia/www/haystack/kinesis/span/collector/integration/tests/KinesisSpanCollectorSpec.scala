@@ -66,7 +66,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       val records = readRecordsFromKafka(4, 5.seconds)
       val externalrecords = readRecordsFromExternalKafka(0, 10.seconds)
       externalrecords.size shouldEqual 0
-      records should not be empty
+      records.size shouldEqual 4
 
       val spans = records.map(Span.parseFrom)
       spans.map(_.getTraceId).toSet should contain allOf("trace-id-1", "trace-id-2")
