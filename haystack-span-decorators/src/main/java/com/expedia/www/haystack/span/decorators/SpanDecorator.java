@@ -4,7 +4,7 @@ import com.expedia.open.tracing.Span;
 import com.typesafe.config.Config;
 
 public interface SpanDecorator {
-    public void init(Config config);
-    Span decorate(Span span);
+    void init(Config config);
+    Span.Builder decorate(Span.Builder span);
     String name();
 }

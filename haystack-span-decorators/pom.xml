@@ -14,29 +14,5 @@
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
-        <plugins>
-            <plugin>
-                <groupId>com.github.os72</groupId>
-                <artifactId>protoc-jar-maven-plugin</artifactId>
-                <version>3.3.0.1</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <includeDirectories>
-                                <include>${project.basedir}/../haystack-idl/proto</include>
-                            </includeDirectories>
-                            <inputDirectories>
-                                <include>${project.basedir}/../haystack-idl/proto</include>
-                            </inputDirectories>
-                            <outputDirectory>target/generated-sources</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
     </build>
 </project>

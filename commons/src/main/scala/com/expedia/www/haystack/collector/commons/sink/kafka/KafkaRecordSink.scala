@@ -25,18 +25,19 @@ import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import org.apache.kafka.clients.producer.{ProducerRecord, _}
 import org.slf4j.LoggerFactory
 
-class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig: List[ExternalKafkaConfiguration]) extends RecordSink with MetricsSupport {
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+
+class KafkaRecordSink(config: KafkaProduceConfiguration,
+                      additionalKafkaProducerConfigs: List[ExternalKafkaConfiguration]) extends RecordSink with MetricsSupport {
 
   private val LOGGER = LoggerFactory.getLogger(classOf[KafkaRecordSink])
 
   private val defaultProducer: KafkaProducer[Array[Byte], Array[Byte]] = new KafkaProducer[Array[Byte], Array[Byte]](config.props)
-  private val listExternalProducers: Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])] = listExternalKafkaConfig
+  private val additionalProducers: List[KafkaProducers] = additionalKafkaProducerConfigs
     .map(cfg => {
-      cfg.tags.toList -> (
-        cfg.kafkaProduceConfiguration.topic,
-        new KafkaProducer[Array[Byte], Array[Byte]](cfg.kafkaProduceConfiguration.props)
-      )
-    }).toMap
+      KafkaProducers(cfg.tags, cfg.kafkaProduceConfiguration.topic, new KafkaProducer[Array[Byte], Array[Byte]](cfg.kafkaProduceConfiguration.props))
+    })
 
   override def toAsync(kvPair: KeyValuePair[Array[Byte], Array[Byte]],
                        callback: (KeyValuePair[Array[Byte], Array[Byte]], Exception) => Unit = null): Unit = {
@@ -51,12 +52,12 @@ class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig
       }
     })
 
-    getMatchingProducers(listExternalProducers, Span.parseFrom(kvPair.value)).foreach(producer => {
-      val tempKafkaMessage = new ProducerRecord(producer._2._1, kvPair.key, kvPair.value)
-      producer._2._2.send(tempKafkaMessage, new Callback {
+    getMatchingProducers(additionalProducers, Span.parseFrom(kvPair.value)).foreach(p => {
+      val tempKafkaMessage = new ProducerRecord(p.topic, kvPair.key, kvPair.value)
+      p.producer.send(tempKafkaMessage, new Callback {
         override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
           if (e != null) {
-            LOGGER.error(s"Fail to produce the message to kafka for topic=${producer._2._1} with reason", e)
+            LOGGER.error(s"Fail to produce the message to kafka for topic=${p.topic} with reason", e)
           }
           if(callback != null) callback(kvPair, e)
         }
@@ -64,17 +65,9 @@ class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig
     })
   }
 
-  private def getMatchingProducers(listProducers: Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])],
-                           span: Span): Map[List[(String, String)], (String, KafkaProducer[Array[Byte], Array[Byte]])] = {
-
-    val tagList = span.getTagsList
-    listProducers.filter(p => {
-      p._1.forall(tag => {
-        tagList.contains(
-          Tag.newBuilder().setKey(tag._1).setVStr(tag._2).build()
-        )
-      })
-    })
+  private def getMatchingProducers(producers: List[KafkaProducers], span: Span): List[KafkaProducers] = {
+    val tagList: List[Tag] = span.getTagsList.asScala.toList
+    producers.filter(producer => producer.isMatched(tagList))
   }
 
   override def close(): Unit = {
@@ -82,6 +75,18 @@ class KafkaRecordSink(config: KafkaProduceConfiguration, listExternalKafkaConfig
       defaultProducer.flush()
       defaultProducer.close()
     }
-    listExternalProducers.foreach(p => p._2._2.close())
+    additionalProducers.foreach(p => p.close())
+  }
+
+  case class KafkaProducers(tags: Map[String, String], topic: String, producer: KafkaProducer[Array[Byte], Array[Byte]]) {
+    def isMatched(spanTags: List[Tag]): Boolean = {
+      val filteredTags = spanTags.filter(t => t.getVStr.equals(tags.getOrElse(t.getKey, null)))
+      filteredTags.size.equals(tags.size)
+    }
+
+    def close(): Unit = {
+      producer.flush()
+      producer.close()
+    }
   }
 }

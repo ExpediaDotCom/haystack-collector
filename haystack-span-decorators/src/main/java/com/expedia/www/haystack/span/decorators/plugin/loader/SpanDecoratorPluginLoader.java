@@ -38,12 +38,14 @@ public class SpanDecoratorPluginLoader {
     private void createLoader() {
         try {
             final File[] pluginFiles = new File(pluginConfig.getDirectory()).listFiles();
-            final List<URL> urls = new ArrayList<>();
-            for (File file : pluginFiles) {
-                urls.add(file.toURI().toURL());
+            if (pluginFiles != null) {
+                final List<URL> urls = new ArrayList<>();
+                for (final File file : pluginFiles) {
+                    urls.add(file.toURI().toURL());
+                }
+                URLClassLoader urlClassLoader = new URLClassLoader(urls.toArray(new URL[0]), SpanDecorator.class.getClassLoader());
+                loader = ServiceLoader.load(SpanDecorator.class, urlClassLoader);
             }
-            URLClassLoader urlClassLoader = new URLClassLoader(urls.toArray(new URL[0]), SpanDecorator.class.getClassLoader());
-            loader = ServiceLoader.load(SpanDecorator.class, urlClassLoader);
         } catch (Exception ex) {
             logger.error("Could not create the class loader for finding jar ", ex);
         } catch (NoClassDefFoundError ex) {
@@ -60,7 +62,7 @@ public class SpanDecoratorPluginLoader {
                 if (validFirstConfig != null) {
                     spanDecorator.init(validFirstConfig.getConfig());
                     spanDecorators.add(spanDecorator);
-                    logger.info("Successfully loaded the plugin ", spanDecorator.name());
+                    logger.info("Successfully loaded the plugin {}", spanDecorator.name());
                 }
             });
         } catch (Exception ex) {
@@ -69,7 +71,4 @@ public class SpanDecoratorPluginLoader {
 
         return spanDecorators;
     }
-
-
-
 }

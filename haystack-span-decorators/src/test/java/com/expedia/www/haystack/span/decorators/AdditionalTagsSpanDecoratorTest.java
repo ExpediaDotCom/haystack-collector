@@ -2,6 +2,7 @@ package com.expedia.www.haystack.span.decorators;
 
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,9 +28,9 @@ public class AdditionalTagsSpanDecoratorTest {
             put("X-HAYSTACK-TAG1", "VALUE1");
             put("X-HAYSTACK-TAG2", "VALUE2");
         }};
-        final AdditionalTagsSpanDecorator additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator(tagConfig, logger);
-        final Span span1 = Span.newBuilder().build();
-        final Span resultSpan = additionalTagsSpanDecorator.decorate(span1);
+        final AdditionalTagsSpanDecorator additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator();
+        additionalTagsSpanDecorator.init(ConfigFactory.parseMap(tagConfig));
+        final Span resultSpan = additionalTagsSpanDecorator.decorate(Span.newBuilder()).build();
 
         final boolean res = resultSpan.getTagsList().stream().allMatch(tag -> {
             final String tagValue = tagConfig.getOrDefault(tag.getKey(), null);
@@ -51,9 +52,10 @@ public class AdditionalTagsSpanDecoratorTest {
             put("X-HAYSTACK-TAG1", "VALUE1");
             put("X-HAYSTACK-TAG2", "VALUE2");
         }};
-        final AdditionalTagsSpanDecorator additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator(tagConfig, logger);
-        final Span span1 = Span.newBuilder().addTags(Tag.newBuilder().setKey("X-HAYSTACK-TAG1").setVStr("VALUE3")).build();
-        final Span resultSpan = additionalTagsSpanDecorator.decorate(span1);
+        final AdditionalTagsSpanDecorator additionalTagsSpanDecorator = new AdditionalTagsSpanDecorator();
+        additionalTagsSpanDecorator.init(ConfigFactory.parseMap(tagConfig));
+        final Span.Builder spanBuilder = Span.newBuilder().addTags(Tag.newBuilder().setKey("X-HAYSTACK-TAG1").setVStr("VALUE3"));
+        final Span resultSpan = additionalTagsSpanDecorator.decorate(spanBuilder).build();
 
         final boolean res = resultSpan.getTagsList().stream().allMatch(tag -> {
             final String tagValue = tagConfig.getOrDefault(tag.getKey(), null);

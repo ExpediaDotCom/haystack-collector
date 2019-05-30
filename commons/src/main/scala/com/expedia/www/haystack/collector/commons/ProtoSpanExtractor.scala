@@ -51,7 +51,7 @@ object ProtoSpanExtractor {
 }
 
 class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
-                         val LOGGER: Logger, listSpanDecorator: List[SpanDecorator])
+                         val LOGGER: Logger, spanDecorators: List[SpanDecorator])
   extends KeyValueExtractor with MetricsSupport {
 
   private val printer = JsonFormat.printer().omittingInsignificantWhitespace()
@@ -133,7 +133,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
       case Success(span) =>
         validSpanMeter.mark()
 
-        val updatedSpan = updateSpan(span)
+        val updatedSpan = decorateSpan(span)
         val kvPair = extractorConfiguration.outputFormat match {
           case Format.JSON => KeyValuePair(updatedSpan.getTraceId.getBytes, printer.print(span).getBytes(Charset.forName("UTF-8")))
           case Format.PROTO => KeyValuePair(updatedSpan.getTraceId.getBytes, updatedSpan.toByteArray)
@@ -150,11 +150,15 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     }
   }
 
-  def updateSpan(span: Span): Span = {
-    var tempSpan = span
-    listSpanDecorator.foreach(decorator => {
-      tempSpan = decorator.decorate(tempSpan)
+  private def decorateSpan(span: Span): Span = {
+    if (spanDecorators.isEmpty) {
+      return span
+    }
+
+    var spanBuilder = span.toBuilder
+    spanDecorators.foreach(decorator => {
+      spanBuilder = decorator.decorate(spanBuilder)
     })
-    tempSpan
+    spanBuilder.build()
   }
 }

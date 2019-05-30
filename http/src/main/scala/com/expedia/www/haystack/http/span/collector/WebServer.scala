@@ -26,9 +26,8 @@ import akka.stream.ActorMaterializer
 import akka.util.ByteString
 import com.codahale.metrics.JmxReporter
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
-import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor, Utils}
+import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor, SpanDecoratorFactory}
 import com.expedia.www.haystack.http.span.collector.json.Span
-import com.expedia.www.haystack.span.decorators.SpanDecorator
 import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization
 import org.slf4j.LoggerFactory
@@ -45,7 +44,7 @@ object WebServer extends App with MetricsSupport {
   private val kafkaSink = new KafkaRecordSink(ProjectConfiguration.kafkaProducerConfig(), ProjectConfiguration.externalKafkaConfig())
   private val kvExtractor = new ProtoSpanExtractor(ProjectConfiguration.extractorConfig(),
     LoggerFactory.getLogger(classOf[ProtoSpanExtractor]),
-    Utils.getSpanDecoratorList(ProjectConfiguration.pluginConfiguration(), ProjectConfiguration.additionalTagConfig(), LOGGER))
+    SpanDecoratorFactory.get(ProjectConfiguration.pluginConfiguration(), ProjectConfiguration.additionalTagConfig(), LOGGER))
 
   private val http = ProjectConfiguration.httpConfig
 

@@ -19,11 +19,10 @@ public class SampleSpanDecorator implements SpanDecorator {
     }
 
     @Override
-    public Span decorate(Span span) {
-        final Span.Builder spanBuilder = span.toBuilder();
+    public Span.Builder decorate(Span.Builder spanBuilder) {
         spanBuilder.addTags(Tag.newBuilder().setKey(config.getString("tag.key"))
                 .setVStr("SAMPLE-TAG").build());
-        return spanBuilder.build();
+        return spanBuilder;
     }
 
     @Override

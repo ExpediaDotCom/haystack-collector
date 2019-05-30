@@ -3,6 +3,7 @@ package com.expedia.www.haystack.span.decorators;
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -11,21 +12,18 @@ import java.util.stream.Collectors;
 
 public class AdditionalTagsSpanDecorator implements SpanDecorator {
 
-    private final Map<String, String> tagConfig;
-    private final Logger logger;
+    private Config tagConfig;
 
-    public AdditionalTagsSpanDecorator(Map<String, String> tagConfig, Logger logger) {
-        this.tagConfig = tagConfig;
-        this.logger = logger;
+    public AdditionalTagsSpanDecorator() {
     }
 
     @Override
     public void init(Config config) {
-
+        tagConfig = config;
     }
 
     @Override
-    public Span decorate(Span span) {
+    public Span.Builder decorate(Span.Builder span) {
         return addHaystackMetadataTags(span);
     }
 
@@ -34,20 +32,18 @@ public class AdditionalTagsSpanDecorator implements SpanDecorator {
         return AdditionalTagsSpanDecorator.class.getName();
     }
 
-    private Span addHaystackMetadataTags(Span span) {
-        final Span.Builder spanBuilder = span.toBuilder();
-
-        final Map<String, String> spanTags = span.getTagsList().stream()
+    private Span.Builder addHaystackMetadataTags(Span.Builder spanBuilder) {
+        final Map<String, String> spanTags = spanBuilder.getTagsList().stream()
                 .collect(Collectors.toMap(Tag::getKey, Tag::getVStr));
 
-        tagConfig.forEach((k, v) -> {
-            final String tagValue = spanTags.getOrDefault(k, null);
+        tagConfig.entrySet().forEach(tag -> {
+            final String tagValue = spanTags.getOrDefault(tag.getKey(), null);
             if (StringUtils.isEmpty(tagValue)) {
-                spanBuilder.addTags(Tag.newBuilder().setKey(k).setVStr(v).build());
+                spanBuilder.addTags(Tag.newBuilder().setKey(tag.getKey()).setVStr(tag.getValue().unwrapped().toString()));
             }
         });
 
-        return spanBuilder.build();
+        return spanBuilder;
     }
 
 }
