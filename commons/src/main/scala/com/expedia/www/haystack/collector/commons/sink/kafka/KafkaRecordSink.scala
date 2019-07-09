@@ -17,12 +17,15 @@
 
 package com.expedia.www.haystack.collector.commons.sink.kafka
 
+import java.util.Collections
+
 import com.expedia.open.tracing.{Span, Tag}
 import com.expedia.www.haystack.collector.commons.MetricsSupport
 import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import org.apache.kafka.clients.producer.{ProducerRecord, _}
+import org.apache.kafka.common.KafkaException
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
@@ -36,8 +39,16 @@ class KafkaRecordSink(config: KafkaProduceConfiguration,
   private val defaultProducer: KafkaProducer[Array[Byte], Array[Byte]] = new KafkaProducer[Array[Byte], Array[Byte]](config.props)
   private val additionalProducers: List[KafkaProducers] = additionalKafkaProducerConfigs
     .map(cfg => {
-      KafkaProducers(cfg.tags, cfg.kafkaProduceConfiguration.topic, new KafkaProducer[Array[Byte], Array[Byte]](cfg.kafkaProduceConfiguration.props))
-    })
+      try {
+        val kafkaProducer = new KafkaProducer[Array[Byte], Array[Byte]](cfg.kafkaProduceConfiguration.props)
+        Option(KafkaProducers(cfg.tags, cfg.kafkaProduceConfiguration.topic, kafkaProducer))
+      } catch {
+        case ex: Exception => {
+          LOGGER.error(s"Failed to create kafka producer for given kafka props => ${cfg.kafkaProduceConfiguration.props} with ex: ", ex)
+          None
+        }
+      }
+    }).collect{case Some(p) => p}
 
   override def toAsync(kvPair: KeyValuePair[Array[Byte], Array[Byte]],
                        callback: (KeyValuePair[Array[Byte], Array[Byte]], Exception) => Unit = null): Unit = {
