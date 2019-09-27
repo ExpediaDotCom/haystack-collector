@@ -1,5 +1,5 @@
 /*
- *  Copyright 2018 Expedia, Inc.
+ *  Copyright 2017 Expedia, Inc.
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  *
  */
 
-package com.expedia.www.haystack.collector.commons.config
+package com.expedia.www.haystack.collector.commons.sink.metrics
 
-import java.util.Properties
-
-case class KafkaProduceConfiguration(topic: String, props: Properties)
-
-case class ExternalKafkaConfiguration(name: String, tags: Map[String, String], kafkaProduceConfiguration: KafkaProduceConfiguration)
+object KafkaMetricNames {
+  val kafkaWriteRate = "kafka.write.rate"
+}

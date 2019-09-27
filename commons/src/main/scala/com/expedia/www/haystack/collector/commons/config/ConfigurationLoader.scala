@@ -172,7 +172,7 @@ object ConfigurationLoader {
       props.put(KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
       props.put(VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getCanonicalName)
 
-      ExternalKafkaConfiguration(tags, KafkaProduceConfiguration(topic, props))
+      ExternalKafkaConfiguration(c._1, tags, KafkaProduceConfiguration(topic, props))
     }).toList
   }
 
