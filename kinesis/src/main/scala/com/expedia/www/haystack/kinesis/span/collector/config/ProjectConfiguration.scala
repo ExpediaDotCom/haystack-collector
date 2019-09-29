@@ -53,6 +53,8 @@ object ProjectConfiguration {
       kinesisEndpoint = if (kinesis.hasPath("endpoint")) Some(kinesis.getString("endpoint")) else None,
       dynamoEndpoint = if (kinesis.hasPath("dynamodb.endpoint")) Some(kinesis.getString("dynamodb.endpoint")) else None,
       dynamoTableName = if(kinesis.hasPath("dynamodb.table")) Some(kinesis.getString("dynamodb.table")) else None,
+      dynamoReadThroughput = if (kinesis.hasPath("dynamodb.readThroughput")) Some(kinesis.getInt("dynamodb.readThroughput")) else None,
+      dynamoWriteThroughput = if (kinesis.hasPath("dynamodb.writeThroughput")) Some(kinesis.getInt("dynamodb.writeThroughput")) else None,
       maxRecordsToRead = kinesis.getInt("max.records.read"),
       idleTimeBetweenReads = kinesis.getDuration("idle.time.between.reads.ms", TimeUnit.MILLISECONDS).millis,
       shardSyncInterval = kinesis.getDuration("shard.sync.interval.ms", TimeUnit.MILLISECONDS).millis,

@@ -27,6 +27,8 @@ data "template_file" "config_data" {
     kafka_endpoint = "${var.kafka_endpoint}"
     sts_role_arn = "${var.sts_role_arn}"
     app_group_name = "${var.haystack_cluster_name}-${var.app_name}"
+    dynamodb_read_thoroughput = "${var.dynamodb_read_throughput}"
+    dynamodb_write_throughput = "${var.dynamodb_write_throughput}"
   }
 }
 

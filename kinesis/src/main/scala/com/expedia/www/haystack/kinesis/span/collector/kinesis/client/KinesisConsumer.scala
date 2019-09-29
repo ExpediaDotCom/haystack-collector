@@ -96,6 +96,8 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
 
     config.dynamoEndpoint.map(kinesisClientConfig.withDynamoDBEndpoint)
     config.kinesisEndpoint.map(kinesisClientConfig.withKinesisEndpoint)
+    config.dynamoReadThroughput.map(kinesisClientConfig.withInitialLeaseTableReadCapacity)
+    config.dynamoWriteThroughput.map(kinesisClientConfig.withInitialLeaseTableWriteCapacity)
 
     new Worker.Builder()
       .config(kinesisClientConfig)
