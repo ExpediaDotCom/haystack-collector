@@ -41,7 +41,8 @@ object App extends MetricsSupport {
 
       healthStatusFile().foreach(statusFile => HealthController.addListener(new UpdateHealthStatusFile(statusFile)))
 
-      pipeline = new KinesisToKafkaPipeline(kafkaProducerConfig(), externalKafkaConfig(), kinesisConsumerConfig(), extractorConfiguration(), additionalTagConfig(), rateLimiterConfiguration(), pluginConfiguration())
+      pipeline = new KinesisToKafkaPipeline(kafkaProducerConfig(), externalKafkaConfig(), kinesisConsumerConfig(),
+        extractorConfiguration(), additionalTagConfig(), rateLimiterConfiguration(), pluginConfiguration())
       pipeline.run()
     } catch {
       case ex: Exception =>

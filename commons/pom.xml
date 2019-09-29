@@ -61,6 +61,18 @@
                 <configuration>
                     <wildcardSuites>com.expedia.www.haystack.collector.commons.unit</wildcardSuites>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <wildcardSuites>com.expedia.www.haystack.collector.commons.integration</wildcardSuites>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
