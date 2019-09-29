@@ -17,7 +17,7 @@
 
 package com.expedia.www.haystack.collector.commons.sink.kafka
 
-import java.util.Properties
+import java.util.{Date, Properties}
 
 import com.codahale.metrics.Meter
 import com.expedia.open.tracing.{Span, Tag}
@@ -26,24 +26,32 @@ import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfigura
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import com.expedia.www.haystack.collector.commons.sink.metrics.KafkaMetricNames
+import com.google.common.util.concurrent.RateLimiter
 import org.apache.kafka.clients.producer.{ProducerRecord, _}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
 class KafkaRecordSink(config: KafkaProduceConfiguration,
-                      additionalKafkaProducerConfigs: List[ExternalKafkaConfiguration]) extends RecordSink with MetricsSupport {
+                      additionalKafkaProducerConfigs: List[ExternalKafkaConfiguration], rateLimiter: RateLimiter) extends RecordSink with MetricsSupport {
 
   private val LOGGER = LoggerFactory.getLogger(classOf[KafkaRecordSink])
 
   private val defaultProducer: (Meter, KafkaProducer[Array[Byte], Array[Byte]]) = getDefaultProducerWithMeter(config)
   private val additionalProducers: List[(Meter, KafkaProducers)] = getAdditionalProducersWithMeter(additionalKafkaProducerConfigs)
+  private val debugEnabledTraceIds: List[String] = List()
 
   override def toAsync(kvPair: KeyValuePair[Array[Byte], Array[Byte]],
                        callback: (KeyValuePair[Array[Byte], Array[Byte]], Exception) => Unit = null): Unit = {
     val kafkaMessage = new ProducerRecord(config.topic, kvPair.key, kvPair.value)
 
+    val span = Span.parseFrom(kvPair.value)
+
+    if (!isDebugEnabled(span) || !rateLimiter.tryAcquire) {
+      return
+    }
     defaultProducer._2.send(kafkaMessage, new Callback {
       override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
         if (e != null) {
@@ -55,7 +63,7 @@ class KafkaRecordSink(config: KafkaProduceConfiguration,
       }
     })
 
-    getMatchingProducers(additionalProducers, Span.parseFrom(kvPair.value)).foreach(p => {
+    getMatchingProducers(additionalProducers, span).foreach(p => {
       val tempKafkaMessage = new ProducerRecord(p._2.topic, kvPair.key, kvPair.value)
       p._2.producer.send(tempKafkaMessage, new Callback {
         override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
@@ -68,6 +76,20 @@ class KafkaRecordSink(config: KafkaProduceConfiguration,
         }
       })
     })
+  }
+
+  private def isDebugEnabled(span: Span): Boolean = {
+    if (debugEnabledTraceIds.contains(span.getTraceId)) {
+      return true
+    }
+    span.getTagsList.find(t =>
+      t.getKey.equalsIgnoreCase("debug") && t.getVBool.equals(true) ) match {
+        case Some(tag) => {
+          debugEnabledTraceIds.add(span.getTraceId)
+          true
+        }
+        case _ => false
+      }
   }
 
   private def getMatchingProducers(producers: List[(Meter, KafkaProducers)], span: Span): List[(Meter, KafkaProducers)] = {

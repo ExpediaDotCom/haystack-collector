@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
-import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
+import com.expedia.www.haystack.collector.commons.config.{ConfigurationLoader, ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration, RateLimiterConfiguration}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 
@@ -64,6 +64,8 @@ object ProjectConfiguration {
   def externalKafkaConfig(): List[ExternalKafkaConfiguration] = ConfigurationLoader.externalKafkaConfiguration(config)
 
   def additionalTagConfig(): Map[String, String] = ConfigurationLoader.additionalTagsConfiguration(config)
+
+  def rateLimiterConfiguration(): RateLimiterConfiguration = ConfigurationLoader.rateLimiterConfiguration(config)
 
   def pluginConfiguration(): Plugin = ConfigurationLoader.pluginConfigurations(config)
 }

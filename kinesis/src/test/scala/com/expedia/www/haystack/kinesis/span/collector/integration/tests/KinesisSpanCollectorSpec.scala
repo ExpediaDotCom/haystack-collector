@@ -111,6 +111,27 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       externalSpans.map(_.getSpanId) should contain allOf("span-id-1", "span-id-2", "span-id-3", "span-id-4")
     }
 
+    "read valid spans from kinesis and store spans in kafka if throttling is not breached" in {
+      Given("a normal span and a span with debug enabled")
+      val span_1 = Span.newBuilder().setTraceId("trace-id-1").setSpanId("span-id-1").setOperationName("operation")
+        .setServiceName("service").setStartTime(StartTimeMicros).setDuration(DurationMicros).build().toByteArray
+      val span_2 = Span.newBuilder().setTraceId("trace-id-2").setSpanId("span-id-1").setOperationName("operation")
+        .setServiceName("service").addTags(Tag.newBuilder().setKey("debug").setVBool(true))
+        .setStartTime(StartTimeMicros).setDuration(DurationMicros).build().toByteArray
+
+      When("spans are sent multiple times")
+      produceRecordsToKinesis(
+        List(span_1, span_2, span_1, span_1, span_1, span_1, span_1, span_1, span_1, span_1, span_1, span_1, span_1))
+
+      Then("only 5 spans or less should be received from kafka")
+      val records = readRecordsFromKafka(5, 5.seconds)
+      val numConsumers = ProjectConfiguration.externalKafkaConfig().size
+      val externalrecords = readRecordsFromExternalKafka(5 * numConsumers, (10 * numConsumers).seconds)
+      externalrecords.size should equal(5)
+      records.size should equal(5)
+      numConsumers should equal(1)
+    }
+
     "load appropriate span decorator plugin using configuration provided " in {
 
       Given("Jar file for SAMPLE_SPAN_DECORATOR plugin in plugins/decorators directory")

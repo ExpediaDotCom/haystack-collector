@@ -19,7 +19,7 @@ package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
 import java.util
 
-import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
+import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration, RateLimiterConfiguration}
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor, SpanDecoratorFactory}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
@@ -27,6 +27,7 @@ import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisCon
 import com.expedia.www.haystack.span.decorators.plugin.loader.SpanDecoratorPluginLoader
 import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 import com.expedia.www.haystack.span.decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
+import com.google.common.util.concurrent.RateLimiter
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -37,6 +38,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
                              kinesisConsumerConfig: KinesisConsumerConfiguration,
                              extractorConfiguration: ExtractorConfiguration,
                              additionalTagsConfig: Map[String, String],
+                             rateLimiterConfig: RateLimiterConfiguration,
                              pluginConfig: Plugin
                             )
   extends AutoCloseable with MetricsSupport {
@@ -45,6 +47,7 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
 
   private var kafkaSink: KafkaRecordSink = _
   private var consumer: KinesisConsumer = _
+  private var rateLimiter: RateLimiter = _
   private var listSpanDecorator: List[SpanDecorator] = List()
 
   /**
@@ -52,8 +55,9 @@ class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
     * the run is a blocking call. kinesis consumer blocks after spinning off the workers
     */
   def run(): Unit = {
+    rateLimiter = RateLimiter.create(rateLimiterConfig.throttleAt)
     listSpanDecorator = SpanDecoratorFactory.get(pluginConfig, additionalTagsConfig, LOGGER)
-    kafkaSink = new KafkaRecordSink(kafkaProducerConfig, listExternalKafkaConfig)
+    kafkaSink = new KafkaRecordSink(kafkaProducerConfig, listExternalKafkaConfig, rateLimiter)
     consumer = new KinesisConsumer(kinesisConsumerConfig, new ProtoSpanExtractor(extractorConfiguration, LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), listSpanDecorator), kafkaSink)
     consumer.startWorker()
   }

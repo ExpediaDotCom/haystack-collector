@@ -187,6 +187,14 @@ object ConfigurationLoader {
     additionalTags
   }
 
+  def rateLimiterConfiguration(config: Config): RateLimiterConfiguration = {
+    if (!config.hasPath("ratelimiter")) {
+      return RateLimiterConfiguration(10000)
+    }
+    val throttleAt = config.getConfig("ratelimiter").getInt("throttle.at")
+    RateLimiterConfiguration(throttleAt)
+  }
+
   def pluginConfigurations(config: Config): Plugin = {
     if (!config.hasPath("plugins")) {
       return null

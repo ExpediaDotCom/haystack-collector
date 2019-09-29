@@ -19,7 +19,7 @@ package com.expedia.www.haystack.kinesis.span.collector.unit.tests
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
-import com.expedia.www.haystack.collector.commons.config.ExternalKafkaConfiguration
+import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, RateLimiterConfiguration}
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
 import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -61,6 +61,11 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
       externalKafka(0).tags.get("X-HAYSTACK-SPAN-SENDER").get shouldEqual("SENDER1")
       externalKafka(0).kafkaProduceConfiguration.topic shouldEqual("external-proto-spans")
       externalKafka(0).kafkaProduceConfiguration.props.getProperty("bootstrap.servers") shouldEqual("kafkasvc:9092")
+    }
+
+    it("should load the rate limiter config from the base.conf") {
+      val rateLimiterConfig: RateLimiterConfiguration = project.rateLimiterConfiguration()
+      rateLimiterConfig.throttleAt shouldEqual(12000)
     }
 
     it("should load the plugins config from the base.conf") {
