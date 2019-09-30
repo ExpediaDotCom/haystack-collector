@@ -18,6 +18,12 @@ class KafkaSinkIntegrationSpec extends WordSpec with GivenWhenThen with Matchers
   private val StartTimeMicros = System.currentTimeMillis() * 1000
   private val DurationMicros = 42
 
+  override def beforeAll(): Unit = {
+  }
+
+  override def afterAll(): Unit = {
+  }
+
   "Kafka Sink" should {
     "not allow spans beyond throttled limit to be written" in {
 

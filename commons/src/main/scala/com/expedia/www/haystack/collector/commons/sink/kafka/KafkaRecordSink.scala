@@ -49,7 +49,7 @@ class KafkaRecordSink(config: KafkaProduceConfiguration,
 
     val span = Span.parseFrom(kvPair.value)
 
-    if (!isDebugEnabled(span) || !rateLimiter.tryAcquire) {
+    if (!isDebugEnabled(span) && !rateLimiter.tryAcquire) {
       return
     }
     defaultProducer._2.send(kafkaMessage, new Callback {
