@@ -3,7 +3,7 @@ package com.expedia.www.haystack.collector.commons.unit
 import com.expedia.open.tracing.Span
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor._
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, MaxSize}
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.scalatest.mockito.MockitoSugar
@@ -28,7 +28,9 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
 
   describe("Protobuf Span Extractor") {
     val mockLogger = mock[Logger]
-    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), mockLogger, List())
+    val spanValidationConfig = MaxSize(enable = false, 5000, "", "")
+
+    val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanValidationConfig), mockLogger, List())
 
     val largestInvalidStartTime = SmallestAllowedStartTimeMicros - 1
     // @formatter:off

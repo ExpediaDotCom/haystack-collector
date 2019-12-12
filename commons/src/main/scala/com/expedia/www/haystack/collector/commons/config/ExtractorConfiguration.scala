@@ -26,4 +26,11 @@ object Format extends Enumeration {
   val PROTO = Value("proto")
 }
 
-case class ExtractorConfiguration(outputFormat: Format)
+case class MaxSize( enable: Boolean,
+                    maxSizeLimit: Int,
+                    infoTagKey: String,
+                    infoTagValue: String )
+
+case class ExtractorConfiguration(outputFormat: Format,
+                                  spanValidation: MaxSize)
+

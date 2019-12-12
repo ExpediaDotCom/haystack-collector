@@ -18,6 +18,10 @@ variable "cpu_request"{}
 variable "cpu_limit"{}
 variable "app_name"{ default = "kinesis-span-collector" }
 variable "env_vars" {}
+variable "max_spansize_validation_enabled" {}
+variable "max_spansize_limit" {}
+variable "message_tag_key" {}
+variable "message_tag_value" {}
 
 variable "termination_grace_period" {
   default = 30

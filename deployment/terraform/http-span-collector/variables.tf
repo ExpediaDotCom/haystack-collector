@@ -26,3 +26,8 @@ variable "termination_grace_period" {
   default = 30
 }
 variable "haystack_cluster_name" {}
+
+variable "max_spansize_validation_enabled" {}
+variable "max_spansize_limit" {}
+variable "message_tag_key" {}
+variable "message_tag_value" {}

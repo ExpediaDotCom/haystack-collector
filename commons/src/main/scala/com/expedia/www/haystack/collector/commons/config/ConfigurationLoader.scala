@@ -147,7 +147,16 @@ object ConfigurationLoader {
 
   def extractorConfiguration(config: Config): ExtractorConfiguration = {
     val extractor = config.getConfig("extractor")
-    ExtractorConfiguration(outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO)
+    val spanValidation = extractor.getConfig("spans.validation")
+    val maxSizeValidationConfig = spanValidation.getConfig("max.size")
+    ExtractorConfiguration(
+      outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO,
+      spanValidation = MaxSize(
+        maxSizeValidationConfig.getBoolean("enable"),
+        maxSizeValidationConfig.getInt("max.size.limit"),
+        maxSizeValidationConfig.getString("message.tag.key"),
+        maxSizeValidationConfig.getString("message.tag.value"))
+    )
   }
 
   def externalKafkaConfiguration(config: Config): List[ExternalKafkaConfiguration] = {

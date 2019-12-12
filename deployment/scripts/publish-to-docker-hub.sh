@@ -31,8 +31,6 @@ if [[ $TAG =~ ([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
     docker tag $DOCKER_IMAGE_NAME $QUALIFIED_DOCKER_IMAGE_NAME:latest
     docker push $QUALIFIED_DOCKER_IMAGE_NAME:latest
 
-elif [[ "$BRANCH" == "master" ]]; then
-    echo "releasing master branch"
 
     # for 'master' branch, add SHA as tags
     docker tag $DOCKER_IMAGE_NAME $QUALIFIED_DOCKER_IMAGE_NAME:$SHA
