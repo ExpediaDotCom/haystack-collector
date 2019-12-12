@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.expedia.open.tracing.{Span, Tag}
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor._
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, MaxSize}
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, SpanMaxSize}
 import com.expedia.www.haystack.collector.commons.record.{KeyValueExtractor, KeyValuePair}
 import com.expedia.www.haystack.span.decorators.SpanDecorator
 import com.google.protobuf.util.JsonFormat
@@ -89,10 +89,10 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
   }
 
   def validateSpanSize(span: Span): Try[Span] = {
-    if (extractorConfiguration.spanValidation.enable)
+    if (extractorConfiguration.spanValidation.spanMaxSize.enable)
       {
         val spanSize = span.toByteArray.length
-        val maxSizeLimit = extractorConfiguration.spanValidation.maxSizeLimit
+        val maxSizeLimit = extractorConfiguration.spanValidation.spanMaxSize.maxSizeLimit
         validate(span, spanSize, SpanSizeLimitExceeded, maxSizeLimit)
       }
     else
@@ -142,7 +142,6 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
 
     if (valueToValidate > highestValidValue) {
       spanSizeLimitExceeded.mark()
-      "Span Size Limit Exceeded: serviceName=[%s] operationName=[%s] traceId=[%s] spanSize=[%d]"
       LOGGER.debug(msg.format(span.getServiceName, span.getOperationName, span.getTraceId, valueToValidate))
       Success(truncateTags(span))
     }
@@ -154,8 +153,8 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
   private def truncateTags(span : Span): Span = {
     val errorTag = span.getTagsList.asScala.filter(tag => tag.getKey.equalsIgnoreCase("error"))
     val spanBuilder = span.toBuilder
-    val messsageTagKey = extractorConfiguration.spanValidation.infoTagKey
-    val messageTagValue = extractorConfiguration.spanValidation.infoTagValue
+    val messsageTagKey = extractorConfiguration.spanValidation.spanMaxSize.infoTagKey
+    val messageTagValue = extractorConfiguration.spanValidation.spanMaxSize.infoTagValue
 
     spanBuilder.clearTags()
     errorTag.foreach(tag => spanBuilder.addTags(tag))

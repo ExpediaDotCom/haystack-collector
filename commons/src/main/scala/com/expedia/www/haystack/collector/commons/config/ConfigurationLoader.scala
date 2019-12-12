@@ -151,12 +151,12 @@ object ConfigurationLoader {
     val maxSizeValidationConfig = spanValidation.getConfig("max.size")
     ExtractorConfiguration(
       outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO,
-      spanValidation = MaxSize(
+      spanValidation = SpanValidation(SpanMaxSize(
         maxSizeValidationConfig.getBoolean("enable"),
         maxSizeValidationConfig.getInt("max.size.limit"),
         maxSizeValidationConfig.getString("message.tag.key"),
         maxSizeValidationConfig.getString("message.tag.value"))
-    )
+      ))
   }
 
   def externalKafkaConfiguration(config: Config): List[ExternalKafkaConfiguration] = {

@@ -26,11 +26,13 @@ object Format extends Enumeration {
   val PROTO = Value("proto")
 }
 
-case class MaxSize( enable: Boolean,
+case class SpanValidation(spanMaxSize: SpanMaxSize)
+
+case class SpanMaxSize( enable: Boolean,
                     maxSizeLimit: Int,
                     infoTagKey: String,
                     infoTagValue: String )
 
 case class ExtractorConfiguration(outputFormat: Format,
-                                  spanValidation: MaxSize)
+                                  spanValidation: SpanValidation)
 

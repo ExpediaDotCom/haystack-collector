@@ -20,7 +20,7 @@ package com.expedia.www.haystack.collector.commons.unit
 import java.nio.charset.Charset
 
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, MaxSize}
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, SpanMaxSize, SpanValidation}
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.google.protobuf.util.JsonFormat
 import org.scalatest.{FunSpec, Matchers}
@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory
 class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
   private val StartTimeMicros = System.currentTimeMillis() * 1000
   private val DurationMicros = 42
-  private val spanValidationConfig = MaxSize(enable = false, 5000, "", "")
 
   describe("TransactionId Key Extractor with proto output type") {
     it("should read the proto span object and set the right partition key and set value as the proto byte stream") {
@@ -37,7 +36,7 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, DurationMicros),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, DurationMicros))
 
-      val spanValidationConfig = MaxSize(enable = false, 5000, "", "")
+      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", ""))
 
       spanMap.foreach(sp => {
         val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
@@ -55,7 +54,7 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, 1),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, 1))
 
-      val spanValidationConfig = MaxSize(enable = false, 5000, "", "")
+      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", ""))
 
       spanMap.foreach(sp => {
         val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)

@@ -26,7 +26,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import com.amazonaws.services.kinesis.model.Record
 import com.expedia.open.tracing.{Span, Tag}
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, MaxSize}
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, SpanMaxSize, SpanValidation}
 import com.expedia.www.haystack.collector.commons.record.KeyValuePair
 import com.expedia.www.haystack.collector.commons.sink.RecordSink
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
@@ -79,7 +79,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar with 
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val spanValidationConfig = MaxSize(enable = false, 5000, "", "")
+        val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", ""))
         val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
@@ -137,7 +137,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar with 
       }.once()
 
       whenExecuting(sink, checkpointer) {
-        val spanValidationConfig = MaxSize(enable = false, 5000, "", "")
+        val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", ""))
         val processor = new RecordProcessor(kinesisConfig, new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()), sink)
         val input_1 = new ProcessRecordsInput().withRecords(List(record_1).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input_1)
@@ -166,7 +166,7 @@ class RecordProcessorSpec extends FunSpec with Matchers with EasyMockSugar with 
       }.once
 
       whenExecuting(sink, checkpointer) {
-        val spanValidationConfig = MaxSize(enable = false, 5000, "", "")
+        val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", ""))
         val processor = new RecordProcessor(kinesisConfig,  new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()), sink)
         val input = new ProcessRecordsInput().withRecords(List(record).asJava).withCheckpointer(checkpointer)
         processor.processRecords(input)
