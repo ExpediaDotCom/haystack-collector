@@ -12,6 +12,7 @@ import org.slf4j.Logger
 
 import scala.collection.immutable.ListMap
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConverters._
 
 class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
 
@@ -26,7 +27,7 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
   private val StartTime = System.currentTimeMillis() * 1000
   private val Duration = 42
   private val Negative = -42
-  private val SampleErrorTag = Tag.newBuilder().setKey("key1").setVBool(true).build()
+  private val SampleErrorTag = Tag.newBuilder().setKey("error").setVBool(true).build()
   private val SpanSizeLimit = 800
 
   def createTags(maxTagsLimit : Int): Array[Tag] = {
@@ -42,7 +43,7 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
   describe("Protobuf Span Extractor") {
     val mockLogger = mock[Logger]
 
-    val spanSizeValidationConfig = SpanValidation(SpanMaxSize(enable = true, SpanSizeLimit, "", ""))
+    val spanSizeValidationConfig = SpanValidation(SpanMaxSize(enable = true, SpanSizeLimit, "X-HAYSTACK-SPAN-INFO", "Tags Truncated"))
     val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanSizeValidationConfig), mockLogger, List())
 
     val largestInvalidStartTime = SmallestAllowedStartTimeMicros - 1
@@ -88,7 +89,13 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
 
     it("should truncate tags to reduce span when spansize exceeded") {
       val kvPairs = protoSpanExtractor.extractKeyValuePairs(largeSizeSpan.toByteArray)
-      kvPairs.foreach(kv => assert(kv.value.length < SpanSizeLimit))
+      kvPairs.foreach {kv =>
+        val spanRecordBytes = kv.value
+        val span = Span.parseFrom(spanRecordBytes)
+        assert(span.getTagsList.asScala.exists(tag => tag.getKey.equalsIgnoreCase("error")))
+        span.getTagsCount shouldBe 2
+        assert(spanRecordBytes.length < SpanSizeLimit)
+      }
     }
 
     it("should pass validation if the number of operation names is below the limit") {
