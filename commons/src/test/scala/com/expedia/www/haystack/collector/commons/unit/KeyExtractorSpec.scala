@@ -20,7 +20,7 @@ package com.expedia.www.haystack.collector.commons.unit
 import java.nio.charset.Charset
 
 import com.expedia.open.tracing.Span
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, SpanMaxSize, SpanValidation}
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor}
 import com.google.protobuf.util.JsonFormat
 import org.scalatest.{FunSpec, Matchers}
@@ -36,8 +36,10 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, DurationMicros),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, DurationMicros))
 
+      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", ""))
+
       spanMap.foreach(sp => {
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes
@@ -52,8 +54,10 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, 1),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, 1))
 
+      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", ""))
+
       spanMap.foreach(sp => {
-        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
+        val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
         kvPairs.size shouldBe 1
 
         kvPairs.head.key shouldBe sp._1.getBytes

@@ -11,6 +11,18 @@ kafka {
   }
 }
 
+extractor {
+  output.format = "proto"
+  spans.validation {
+    max.size {
+      enable = "${max_spansize_validation_enabled}"
+      max.size.limit = "${max_spansize_limit}"
+      message.tag.key = "${message_tag_key}"
+      message.tag.value = "${message_tag_value}"
+    }
+  }
+}
+
 kinesis {
   sts.role.arn = "${sts_role_arn}"
   aws.region = "${kinesis_stream_region}"

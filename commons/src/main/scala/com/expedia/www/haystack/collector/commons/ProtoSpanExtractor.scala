@@ -22,15 +22,16 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
 
-import com.expedia.open.tracing.Span
+import com.expedia.open.tracing.{Span, Tag}
 import com.expedia.www.haystack.collector.commons.ProtoSpanExtractor._
-import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format}
+import com.expedia.www.haystack.collector.commons.config.{ExtractorConfiguration, Format, SpanMaxSize}
 import com.expedia.www.haystack.collector.commons.record.{KeyValueExtractor, KeyValuePair}
 import com.expedia.www.haystack.span.decorators.SpanDecorator
 import com.google.protobuf.util.JsonFormat
 import org.slf4j.Logger
 
 import scala.util.{Failure, Success, Try}
+import scala.collection.JavaConverters._
 
 object ProtoSpanExtractor {
   private val DaysInYear1970 = 365
@@ -44,6 +45,7 @@ object ProtoSpanExtractor {
   val TraceIdIsRequired = "Trace ID is required: serviceName=[%s] operationName=[%s]"
   val StartTimeIsInvalid = "Start time [%d] is invalid: serviceName=[%s] operationName=[%s]"
   val DurationIsInvalid = "Duration [%d] is invalid: serviceName=[%s] operationName=[%s]"
+  val SpanSizeLimitExceeded = "Span Size Limit Exceeded: serviceName=[%s] operationName=[%s] traceId=[%s] spanSize=[%d]"
 
   val ServiceNameVsTtlAndOperationNames = new ConcurrentHashMap[String, TtlAndOperationNames]
   val MaximumOperationNameCount = 1000
@@ -58,6 +60,7 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
 
   private val invalidSpanMeter = metricRegistry.meter("invalid.span")
   private val validSpanMeter = metricRegistry.meter("valid.span")
+  private val spanSizeLimitExceeded = metricRegistry.meter("sizeLimitExceeded.span")
 
   override def configure(): Unit = ()
 
@@ -83,6 +86,17 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
 
   def validateDuration(span: Span): Try[Span] = {
     validate(span, span.getDuration, DurationIsInvalid, 0, span.getServiceName, span.getOperationName)
+  }
+
+  def validateSpanSize(span: Span): Try[Span] = {
+    if (extractorConfiguration.spanValidation.spanMaxSize.enable)
+      {
+        val spanSize = span.toByteArray.length
+        val maxSizeLimit = extractorConfiguration.spanValidation.spanMaxSize.maxSizeLimit
+        validate(span, spanSize, SpanSizeLimitExceeded, maxSizeLimit)
+      }
+    else
+      Success(span)
   }
 
   private def validate(span: Span,
@@ -121,8 +135,37 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     }
   }
 
+  private def validate(span: Span,
+                       valueToValidate: Int,
+                       msg: String,
+                       highestValidValue: Int): Try[Span] = {
+
+    if (valueToValidate > highestValidValue) {
+      spanSizeLimitExceeded.mark()
+      LOGGER.debug(msg.format(span.getServiceName, span.getOperationName, span.getTraceId, valueToValidate))
+      Success(truncateTags(span))
+    }
+    else {
+      Success(span)
+    }
+  }
+
+  private def truncateTags(span : Span): Span = {
+    val errorTag = span.getTagsList.asScala.filter(tag => tag.getKey.equalsIgnoreCase("error"))
+    val spanBuilder = span.toBuilder
+    val messsageTagKey = extractorConfiguration.spanValidation.spanMaxSize.infoTagKey
+    val messageTagValue = extractorConfiguration.spanValidation.spanMaxSize.infoTagValue
+
+    spanBuilder.clearTags()
+    errorTag.foreach(tag => spanBuilder.addTags(tag))
+    spanBuilder.addTags(Tag.newBuilder().setKey(messsageTagKey).setVStr(messageTagValue))
+    spanBuilder.build()
+  }
+
+
   override def extractKeyValuePairs(recordBytes: Array[Byte]): List[KeyValuePair[Array[Byte], Array[Byte]]] = {
     Try(Span.parseFrom(recordBytes))
+      .flatMap(span => validateSpanSize(span))
       .flatMap(span => validateServiceName(span))
       .flatMap(span => validateOperationName(span))
       .flatMap(span => validateSpanId(span))

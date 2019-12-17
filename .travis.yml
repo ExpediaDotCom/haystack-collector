@@ -3,6 +3,12 @@ language: java
 services:
   - docker
 
+jdk:
+  - oraclejdk8
+  - openjdk8
+
+dist: trusty
+
 env:
   global:
     - BRANCH=${TRAVIS_BRANCH}
