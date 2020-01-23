@@ -35,6 +35,7 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
       kinesis.metricsLevel shouldEqual MetricsLevel.NONE
       kinesis.awsRegion shouldEqual "us-west-2"
       kinesis.appGroupName shouldEqual "haystack-kinesis-proto-span-collector"
+      kinesis.streamEndpoint.get shouldEqual "kinesis.us-west-2.amazonaws.com"
       kinesis.checkpointRetries shouldBe 50
       kinesis.dynamoTableName shouldBe None
       kinesis.checkpointInterval.toMillis shouldBe 15000L
