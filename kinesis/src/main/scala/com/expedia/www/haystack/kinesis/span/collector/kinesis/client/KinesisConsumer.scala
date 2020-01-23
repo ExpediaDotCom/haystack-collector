@@ -93,6 +93,7 @@ class KinesisConsumer(config: KinesisConsumerConfiguration,
       .withRegionName(region.getName)
       .withTableName(config.dynamoTableName.getOrElse(config.appGroupName))
       .withTaskBackoffTimeMillis(config.taskBackoffTime.toMillis)
+      .withKinesisEndpoint(config.streamEndpoint.orNull)
 
     config.dynamoEndpoint.map(kinesisClientConfig.withDynamoDBEndpoint)
     config.kinesisEndpoint.map(kinesisClientConfig.withKinesisEndpoint)

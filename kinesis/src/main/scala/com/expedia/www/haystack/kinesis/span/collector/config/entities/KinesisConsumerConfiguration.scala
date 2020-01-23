@@ -25,6 +25,7 @@ import scala.concurrent.duration.FiniteDuration
 case class KinesisConsumerConfiguration(awsRegion: String,
                                         stsRoleArn: Option[String],
                                         appGroupName: String,
+                                        streamEndpoint: Option[String],
                                         streamName: String,
                                         streamPosition: InitialPositionInStream,
                                         checkpointInterval: FiniteDuration,
