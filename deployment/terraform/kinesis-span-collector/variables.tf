@@ -22,6 +22,8 @@ variable "max_spansize_validation_enabled" {}
 variable "max_spansize_limit" {}
 variable "message_tag_key" {}
 variable "message_tag_value" {}
+variable "max_spansize_skip_tags" {}
+variable "max_spansize_skip_services" {}
 
 variable "termination_grace_period" {
   default = 30

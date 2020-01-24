@@ -33,6 +33,8 @@ module "kinesis-span-collector" {
   max_spansize_limit = "${var.collector["kinesis_span_collector_max_spansize_limit"]}"
   message_tag_key = "${var.collector["kinesis_span_collector_message_tag_key"]}"
   message_tag_value = "${var.collector["kinesis_span_collector_message_tag_value"]}"
+  max_spansize_skip_tags = "${var.collector["kinesis_span_collector_max_spansize_skip_tags"]}"
+  max_spansize_skip_services = "${var.collector["kinesis_span_collector_max_spansize_skip_services"]}"
 }
 
 module "http-span-collector" {
@@ -60,4 +62,6 @@ module "http-span-collector" {
   max_spansize_limit = "${var.collector["http_span_collector_max_spansize_limit"]}"
   message_tag_key = "${var.collector["http_span_collector_message_tag_key"]}"
   message_tag_value = "${var.collector["http_span_collector_message_tag_value"]}"
+  max_spansize_skip_tags = "${var.collector["http_span_collector_max_spansize_skip_tags"]}"
+  max_spansize_skip_services = "${var.collector["http_span_collector_max_spansize_skip_services"]}"
 }

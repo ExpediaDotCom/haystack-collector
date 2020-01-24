@@ -19,6 +19,8 @@ extractor {
       max.size.limit = "${max_spansize_limit}"
       message.tag.key = "${message_tag_key}"
       message.tag.value = "${message_tag_value}"
+      skip.tags = "${max_spansize_skip_tags}"
+      skip.services = "${max_spansize_skip_services}"
     }
   }
 }
