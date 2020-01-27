@@ -40,13 +40,11 @@ object ProjectConfiguration {
   def kinesisConsumerConfig(): KinesisConsumerConfiguration = {
     val kinesis = config.getConfig("kinesis")
     val stsRoleArn = if(kinesis.hasPath("sts.role.arn")) Some(kinesis.getString("sts.role.arn")) else None
-    val streamEndpoint = if(kinesis.hasPath("stream.endpoint")) Some(kinesis.getString("stream.endpoint")) else None
 
     KinesisConsumerConfiguration(
       awsRegion = kinesis.getString("aws.region"),
       stsRoleArn = stsRoleArn,
       appGroupName = kinesis.getString("app.group.name"),
-      streamEndpoint = streamEndpoint,
       streamName = kinesis.getString("stream.name"),
       streamPosition =InitialPositionInStream.valueOf(kinesis.getString("stream.position")),
       kinesis.getDuration("checkpoint.interval.ms", TimeUnit.MILLISECONDS).millis,
