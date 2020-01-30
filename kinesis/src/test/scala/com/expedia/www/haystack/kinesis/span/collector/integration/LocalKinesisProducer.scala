@@ -41,6 +41,7 @@ trait LocalKinesisProducer {
   }
 
   protected def createStreamIfNotExists(): Unit = {
+    println(s"Creating kinesis stream")
     try {
       val describeResult = client.describeStream(TestConfiguration.kinesisStreamName)
       println(s"Created kinesis stream ${describeResult.getStreamDescription.getStreamName}")

@@ -31,7 +31,7 @@ class IntegrationTestSpec extends WordSpec with GivenWhenThen with Matchers with
   override def beforeAll(): Unit = {
     // check if the stream exists, if not create one
     createStreamIfNotExists()
-
+    Thread.sleep(30000)
     new File("/app").mkdir()
 
     executor.submit(new Runnable {
