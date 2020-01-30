@@ -29,7 +29,7 @@ import com.expedia.www.haystack.kinesis.span.collector.integration.config.TestCo
 trait LocalKinesisProducer {
 
   private val client = {
-    val endpointConfig = new AwsClientBuilder.EndpointConfiguration(s"http://${TestConfiguration.remoteKinesisHost}:${TestConfiguration.kinesisPort}", "us-west-2")
+    val endpointConfig = new AwsClientBuilder.EndpointConfiguration("https://kinesis.us-west-2.amazonaws.com", "us-west-2")
     val clientConfig = new ClientConfiguration().withProtocol(Protocol.HTTP)
 
     println(s"Building kinesis client for endpoint ${endpointConfig.getServiceEndpoint}")
