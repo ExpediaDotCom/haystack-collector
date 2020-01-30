@@ -66,7 +66,7 @@ trait LocalKafkaConsumer {
     var waitTimeLeft = maxWait.toMillis
     var done = true
     while (done) {
-      kafkaConsumer.poll(250).records(TestConfiguration.kafkaStreamName).map(rec => {
+      kafkaConsumer.poll(1000).records(TestConfiguration.kafkaStreamName).map(rec => {
         received += 1
         records += rec.value()
       })

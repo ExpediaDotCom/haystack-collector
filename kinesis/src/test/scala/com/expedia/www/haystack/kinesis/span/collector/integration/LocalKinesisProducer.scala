@@ -32,6 +32,7 @@ trait LocalKinesisProducer {
     val endpointConfig = new AwsClientBuilder.EndpointConfiguration(s"http://${TestConfiguration.remoteKinesisHost}:${TestConfiguration.kinesisPort}", "us-west-2")
     val clientConfig = new ClientConfiguration().withProtocol(Protocol.HTTP)
 
+    println(s"Building kinesis client for endpoint ${endpointConfig.getServiceEndpoint}")
     AmazonKinesisClientBuilder
       .standard()
       .withClientConfiguration(clientConfig)
@@ -41,7 +42,8 @@ trait LocalKinesisProducer {
 
   protected def createStreamIfNotExists(): Unit = {
     try {
-      client.describeStream(TestConfiguration.kinesisStreamName)
+      val describeResult = client.describeStream(TestConfiguration.kinesisStreamName)
+      println(s"Created kinesis stream ${describeResult.getStreamDescription.getStreamName}")
     } catch {
       case _: ResourceNotFoundException =>
         println(s"Creating kinesis stream ${TestConfiguration.kinesisStreamName}")
