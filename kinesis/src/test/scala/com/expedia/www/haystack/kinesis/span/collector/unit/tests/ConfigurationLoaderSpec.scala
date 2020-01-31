@@ -43,7 +43,7 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
       kinesis.maxRecordsToRead shouldBe 2000
       kinesis.metricsBufferTime.toMillis shouldBe 10000
       kinesis.shardSyncInterval.toMillis shouldBe 30000
-      kinesis.kinesisEndpoint.get shouldBe "https://kinesis.us-west-2.amazonaws.com"
+      kinesis.kinesisEndpoint.isEmpty shouldBe true
       kinesis.dynamoEndpoint.isEmpty shouldBe true
       kinesis.taskBackoffTime.toMillis shouldBe 200
     }
