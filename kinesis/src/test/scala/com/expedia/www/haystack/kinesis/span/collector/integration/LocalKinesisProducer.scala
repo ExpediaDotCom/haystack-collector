@@ -37,7 +37,6 @@ trait LocalKinesisProducer {
       .standard()
       .withClientConfiguration(clientConfig)
       .withEndpointConfiguration(endpointConfig)
-      .withRegion("us-west-2")
       .build()
   }
 
