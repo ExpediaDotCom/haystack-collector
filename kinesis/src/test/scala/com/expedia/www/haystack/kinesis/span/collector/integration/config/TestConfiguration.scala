@@ -20,7 +20,7 @@ package com.expedia.www.haystack.kinesis.span.collector.integration.config
 object TestConfiguration {
   val remoteKafkaHost = "kafkasvc"
   val kafkaPort = 9092
-  val remoteKinesisHost = "kinesis.us-west-2.amazonaws.com"
+  val remoteKinesisHost = "kinesis"
   val kinesisPort = 4567
   val kafkaStreamName = "proto-spans"
   val kinesisStreamName = "haystack-proto-spans"
