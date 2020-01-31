@@ -3,8 +3,8 @@ var AWS = require('aws-sdk');
 var config = {
   "accessKeyId": "FAKE",
   "secretAccessKey": "FAKE",
-  "region": "FAKE",
-  "kinesisEndpoint": "http://kinesis:4567",
+  "region": "us-west-2",
+  "kinesisEndpoint": "https://kinesis.us-west-2.amazonaws.com:4567",
   "kinesisPort": 4567,
   "StreamName": "haystack-proto-spans",
   "ShardCount": 1
