@@ -21,7 +21,6 @@ prepare_integration_test_env: docker_build
     # create the stream and dynamodb table
 	docker run \
     		-it --network=sandbox_default \
-    		-e "AWS_CBOR_DISABLE=1" \
     		-v $(PWD)/build/integration-tests/scripts:/scripts \
     		-w /scripts \
     		node:6.11.3 \
@@ -32,7 +31,6 @@ integration_test: prepare_integration_test_env
 	docker run \
 		-it \
 		--network=sandbox_default \
-		-e "AWS_CBOR_DISABLE=1" \
 		-e "AWS_ACCESS_KEY=fake" \
 		-e "AWS_SECRET_KEY=fake" \
 		-v $(PWD)/..:/src \
