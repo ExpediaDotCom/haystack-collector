@@ -142,7 +142,11 @@ class ProtoSpanExtractor(extractorConfiguration: ExtractorConfiguration,
     if (valueToValidate > highestValidValue) {
       spanSizeLimitExceededMeter.mark()
       LOGGER.debug(msg.format(span.getServiceName, span.getOperationName, span.getTraceId, valueToValidate, getProbableTagsExceedingSizeLimit(span)))
-      Success(truncateTags(span))
+      if (extractorConfiguration.spanValidation.spanMaxSize.logOnly) {
+        Success(span)
+      } else {
+        Success(truncateTags(span))
+      }
     }
     else {
       Success(span)

@@ -36,7 +36,7 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, DurationMicros),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, DurationMicros))
 
-      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", "", Seq(), Seq()))
+      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, logOnly = false, 5000, "", "", Seq(), Seq()))
 
       spanMap.foreach(sp => {
         val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)
@@ -54,7 +54,7 @@ class KeyExtractorSpec extends FunSpec with Matchers with MetricsSupport {
         "trace-id-1" -> createSpan("trace-id-1", "spanId_1", "service_1", "operation", StartTimeMicros, 1),
         "trace-id-2" -> createSpan("trace-id-2", "spanId_2", "service_2", "operation", StartTimeMicros, 1))
 
-      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, 5000, "", "", Seq(), Seq()))
+      val spanValidationConfig = SpanValidation(SpanMaxSize(enable = false, logOnly = false, 5000, "", "", Seq(), Seq()))
 
       spanMap.foreach(sp => {
         val kvPairs = new ProtoSpanExtractor(ExtractorConfiguration(Format.JSON, spanValidationConfig), LoggerFactory.getLogger(classOf[ProtoSpanExtractor]), List()).extractKeyValuePairs(sp._2.toByteArray)

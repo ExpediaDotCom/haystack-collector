@@ -29,6 +29,7 @@ object Format extends Enumeration {
 case class SpanValidation(spanMaxSize: SpanMaxSize)
 
 case class SpanMaxSize(enable: Boolean,
+                       logOnly: Boolean,
                        maxSizeLimit: Int,
                        infoTagKey: String,
                        infoTagValue: String,

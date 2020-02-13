@@ -154,6 +154,7 @@ object ConfigurationLoader {
       outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO,
       spanValidation = SpanValidation(SpanMaxSize(
         maxSizeValidationConfig.getBoolean("enable"),
+        maxSizeValidationConfig.getBoolean("log.only"),
         maxSizeValidationConfig.getInt("max.size.limit"),
         maxSizeValidationConfig.getString("message.tag.key"),
         maxSizeValidationConfig.getString("message.tag.value"),

@@ -34,7 +34,7 @@ class ProtoSpanExtractorSpec extends FunSpec with Matchers with MockitoSugar {
   describe("Protobuf Span Extractor") {
     val mockLogger = mock[Logger]
 
-    val spanSizeValidationConfig = SpanValidation(SpanMaxSize(enable = true, SpanSizeLimit, "X-HAYSTACK-SPAN-INFO", "Tags Truncated", Seq("error"), Seq(SkipTagTruncationServiceName)))
+    val spanSizeValidationConfig = SpanValidation(SpanMaxSize(enable = true, logOnly = false, SpanSizeLimit, "X-HAYSTACK-SPAN-INFO", "Tags Truncated", Seq("error"), Seq(SkipTagTruncationServiceName)))
     val protoSpanExtractor = new ProtoSpanExtractor(ExtractorConfiguration(Format.PROTO, spanSizeValidationConfig), mockLogger, List())
 
     val largestInvalidStartTime = SmallestAllowedStartTimeMicros - 1
