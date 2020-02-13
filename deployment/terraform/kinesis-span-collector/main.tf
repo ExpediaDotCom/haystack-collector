@@ -31,6 +31,8 @@ data "template_file" "config_data" {
     max_spansize_limit = "${var.max_spansize_limit}"
     message_tag_key = "${var.message_tag_key}"
     message_tag_value = "${var.message_tag_value}"
+    max_spansize_skip_tags = "${var.max_spansize_skip_tags}"
+    max_spansize_skip_services = "${var.max_spansize_skip_services}"
   }
 }
 

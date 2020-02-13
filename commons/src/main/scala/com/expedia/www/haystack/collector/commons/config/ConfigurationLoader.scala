@@ -42,16 +42,15 @@ object ConfigurationLoader {
     * if overrides_config_path env variable exists, then we load that config file and use base conf as fallback,
     * else we load the config from env variables(prefixed with haystack) and use base conf as fallback
     *
-    * @param resourceName name of the resource file to be loaded. Default value is `config/base.conf`
+    * @param resourceName  name of the resource file to be loaded. Default value is `config/base.conf`
     * @param envNamePrefix env variable prefix to override config values. Default is `HAYSTACK_PROP_`
-    *
     * @return an instance of com.typesafe.Config
     */
-  def loadConfigFileWithEnvOverrides(resourceName : String = "config/base.conf",
-                                     envNamePrefix : String = ENV_NAME_PREFIX) : Config = {
+  def loadConfigFileWithEnvOverrides(resourceName: String = "config/base.conf",
+                                     envNamePrefix: String = ENV_NAME_PREFIX): Config = {
 
-    require(resourceName != null && resourceName.length > 0 , "resourceName is required")
-    require(envNamePrefix != null && envNamePrefix.length > 0 , "envNamePrefix is required")
+    require(resourceName != null && resourceName.length > 0, "resourceName is required")
+    require(envNamePrefix != null && envNamePrefix.length > 0, "envNamePrefix is required")
 
     val baseConfig = ConfigFactory.load(resourceName)
 
@@ -84,7 +83,7 @@ object ConfigurationLoader {
   }
 
   /**
-    *  @return new config object with haystack specific environment variables
+    * @return new config object with haystack specific environment variables
     */
   private[haystack] def parsePropertiesFromMap(envVars: Map[String, String],
                                                keysWithArrayValues: Set[String],
@@ -101,6 +100,7 @@ object ConfigurationLoader {
   /**
     * converts the env variable to HOCON format
     * for e.g. env variable HAYSTACK_KAFKA_STREAMS_NUM_STREAM_THREADS gets converted to kafka.streams.num.stream.threads
+    *
     * @param env environment variable name
     * @return variable name that complies with hocon key
     */
@@ -110,6 +110,7 @@ object ConfigurationLoader {
 
   /**
     * converts the env variable value to iterable object if it starts and ends with '[' and ']' respectively.
+    *
     * @param env environment variable value
     * @return string or iterable object
     */
@@ -153,9 +154,12 @@ object ConfigurationLoader {
       outputFormat = if (extractor.hasPath("output.format")) Format.withName(extractor.getString("output.format")) else Format.PROTO,
       spanValidation = SpanValidation(SpanMaxSize(
         maxSizeValidationConfig.getBoolean("enable"),
+        maxSizeValidationConfig.getBoolean("log.only"),
         maxSizeValidationConfig.getInt("max.size.limit"),
         maxSizeValidationConfig.getString("message.tag.key"),
-        maxSizeValidationConfig.getString("message.tag.value"))
+        maxSizeValidationConfig.getString("message.tag.value"),
+        maxSizeValidationConfig.getStringList("skip.tags").map(_.toLowerCase),
+        maxSizeValidationConfig.getStringList("skip.services").map(_.toLowerCase))
       ))
   }
 
@@ -169,7 +173,7 @@ object ConfigurationLoader {
       val props = new Properties()
       val cfg = ConfigFactory.parseMap(c._2.asInstanceOf[util.HashMap[String, Object]])
       val topic = cfg.getString("config.topic")
-      val tags =  cfg.getConfig("tags").entrySet().foldRight(Map[String, String]())((t, tMap) => {
+      val tags = cfg.getConfig("tags").entrySet().foldRight(Map[String, String]())((t, tMap) => {
         tMap + (t.getKey -> t.getValue.unwrapped().toString)
       })
       val temp = cfg.getConfig("config.props").entrySet() foreach {

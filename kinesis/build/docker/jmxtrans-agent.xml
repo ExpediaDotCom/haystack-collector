@@ -21,6 +21,7 @@
 
         <query objectName="metrics:name=valid.span" attributes="OneMinuteRate" resultAlias="valid.span.#attribute#"/>
         <query objectName="metrics:name=invalid.span" attributes="OneMinuteRate" resultAlias="invalid.span.#attribute#"/>
+        <query objectName="metrics:name=sizeLimitExceeded.span" attributes="OneMinuteRate" resultAlias="sizeLimitExceeded.span.#attribute#"/>
     </queries>
     <outputWriter class="org.jmxtrans.agent.GraphitePlainTextTcpOutputWriter">
         <host>${HAYSTACK_GRAPHITE_HOST:monitoring-influxdb-graphite.kube-system.svc}</host>

@@ -28,10 +28,13 @@ object Format extends Enumeration {
 
 case class SpanValidation(spanMaxSize: SpanMaxSize)
 
-case class SpanMaxSize( enable: Boolean,
-                    maxSizeLimit: Int,
-                    infoTagKey: String,
-                    infoTagValue: String )
+case class SpanMaxSize(enable: Boolean,
+                       logOnly: Boolean,
+                       maxSizeLimit: Int,
+                       infoTagKey: String,
+                       infoTagValue: String,
+                       skipTags: Seq[String],
+                       skipServices: Seq[String])
 
 case class ExtractorConfiguration(outputFormat: Format,
                                   spanValidation: SpanValidation)

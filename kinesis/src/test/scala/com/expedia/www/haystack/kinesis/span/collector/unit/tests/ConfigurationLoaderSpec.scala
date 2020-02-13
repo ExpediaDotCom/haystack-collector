@@ -21,7 +21,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionIn
 import com.amazonaws.services.kinesis.metrics.interfaces.MetricsLevel
 import com.expedia.www.haystack.collector.commons.config.ExternalKafkaConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
-import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
+import com.expedia.www.haystack.span.decorators.plugin.config.Plugin
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.scalatest.{FunSpec, Matchers}
 
@@ -54,19 +54,29 @@ class ConfigurationLoaderSpec extends FunSpec with Matchers {
       kafka.props.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG) shouldEqual "kafkasvc:9092"
     }
 
+    it("should load the extractor config only from base.conf") {
+      val extractorConfig = project.extractorConfiguration()
+      extractorConfig.outputFormat.toString shouldEqual "proto"
+      extractorConfig.spanValidation.spanMaxSize.maxSizeLimit shouldEqual 5000
+      extractorConfig.spanValidation.spanMaxSize.enable shouldEqual false
+      extractorConfig.spanValidation.spanMaxSize.skipTags.contains("error") shouldEqual true
+      extractorConfig.spanValidation.spanMaxSize.skipServices.size shouldEqual 0
+
+    }
+
     it("should load the external kafka config from the base.conf") {
       val externalKafka: List[ExternalKafkaConfiguration] = project.externalKafkaConfig()
-      externalKafka(0).tags.get("X-HAYSTACK-SPAN-OWNER").get shouldEqual("OWNER1")
-      externalKafka(0).tags.get("X-HAYSTACK-SPAN-SENDER").get shouldEqual("SENDER1")
-      externalKafka(0).kafkaProduceConfiguration.topic shouldEqual("external-proto-spans")
-      externalKafka(0).kafkaProduceConfiguration.props.getProperty("bootstrap.servers") shouldEqual("kafkasvc:9092")
+      externalKafka.head.tags("X-HAYSTACK-SPAN-OWNER") shouldEqual "OWNER1"
+      externalKafka.head.tags("X-HAYSTACK-SPAN-SENDER") shouldEqual "SENDER1"
+      externalKafka.head.kafkaProduceConfiguration.topic shouldEqual "external-proto-spans"
+      externalKafka.head.kafkaProduceConfiguration.props.getProperty("bootstrap.servers") shouldEqual "kafkasvc:9092"
     }
 
     it("should load the plugins config from the base.conf") {
       val plugin: Plugin = project.pluginConfiguration()
-      plugin.getDirectory shouldEqual("plugins/decorators")
-      plugin.getPluginConfigurationList.get(0).getName shouldEqual("SAMPLE_SPAN_DECORATOR")
-      plugin.getPluginConfigurationList.get(0).getConfig.getString("tag.key") shouldEqual("X-HAYSTACK-PLUGIN-SPAN-DECORATOR")
+      plugin.getDirectory shouldEqual "plugins/decorators"
+      plugin.getPluginConfigurationList.get(0).getName shouldEqual "SAMPLE_SPAN_DECORATOR"
+      plugin.getPluginConfigurationList.get(0).getConfig.getString("tag.key") shouldEqual "X-HAYSTACK-PLUGIN-SPAN-DECORATOR"
     }
 
     it("should load the health status file") {
