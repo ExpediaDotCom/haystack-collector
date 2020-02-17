@@ -28,6 +28,7 @@ data "template_file" "config_data" {
     sts_role_arn = "${var.sts_role_arn}"
     app_group_name = "${var.haystack_cluster_name}-${var.app_name}"
     max_spansize_validation_enabled = "${var.max_spansize_validation_enabled}"
+    max_spansize_log_only = "${var.max_spansize_log_only}"
     max_spansize_limit = "${var.max_spansize_limit}"
     message_tag_key = "${var.message_tag_key}"
     message_tag_value = "${var.message_tag_value}"
