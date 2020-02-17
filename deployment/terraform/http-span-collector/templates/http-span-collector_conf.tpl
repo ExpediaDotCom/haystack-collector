@@ -16,6 +16,7 @@ extractor {
   spans.validation {
     max.size {
       enable = "${max_spansize_validation_enabled}"
+      log.only = "${max_spansize_log_only}"
       max.size.limit = "${max_spansize_limit}"
       message.tag.key = "${message_tag_key}"
       message.tag.value = "${message_tag_value}"
