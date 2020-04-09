@@ -15,7 +15,7 @@
 
     <properties>
         <kinesis.client.version>1.13.2</kinesis.client.version>
-        <kinesis.producer.version>0.14.0</kinesis.producer.version>
+        <kinesis.producer.version>0.12.3</kinesis.producer.version>
         <aws-sdk.version>1.11.128</aws-sdk.version>
         <mainClass>com.expedia.www.haystack.kinesis.span.collector.App</mainClass>
         <finalName>${project.artifactId}-${project.version}</finalName>
