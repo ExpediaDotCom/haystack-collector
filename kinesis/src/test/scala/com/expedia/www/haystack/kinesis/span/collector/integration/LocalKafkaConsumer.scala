@@ -78,7 +78,7 @@ trait LocalKafkaConsumer {
       }
     }
 
-    if(records.size < minExpectedCount) throw new RuntimeException("Fail to read the expected records from kafka")
+    if(records.size < minExpectedCount) throw new RuntimeException(s"Fail to read the expected records (${records.size}) from kafka")
 
     records.toList
   }

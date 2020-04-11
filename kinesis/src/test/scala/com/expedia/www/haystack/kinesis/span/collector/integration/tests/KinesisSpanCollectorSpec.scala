@@ -44,7 +44,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       produceRecordsToKinesis(List(spanBytes, spanBytes))
 
       Then("it should be pushed to kafka")
-      readRecordsFromKafka(0, 1.second).headOption
+      readRecordsFromKafka(0, 10.second).headOption
     }
 
     "read valid spans from kinesis and store individual spans in kafka" in {
@@ -63,7 +63,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       produceRecordsToKinesis(List(span_1, span_2, span_3, span_4))
 
       Then("it should be pushed to kafka with partition key as its trace id")
-      val records = readRecordsFromKafka(4, 5.seconds)
+      val records = readRecordsFromKafka(4, 10.seconds)
       val externalrecords = readRecordsFromExternalKafka(0, 10.seconds)
       externalrecords.size shouldEqual 0
       records.size shouldEqual 4
@@ -97,7 +97,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       produceRecordsToKinesis(List(span_1, span_2, span_3, span_4))
 
       Then("it should be pushed to default kafka and external kafka with partition key as its trace id")
-      val records = readRecordsFromKafka(4, 5.seconds)
+      val records = readRecordsFromKafka(4, 10.seconds)
       val numConsumers = ProjectConfiguration.externalKafkaConfig().size
       val externalrecords = readRecordsFromExternalKafka(4 * numConsumers, (10 * numConsumers).seconds)
       externalrecords.size should equal(4)
@@ -121,7 +121,7 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       produceRecordsToKinesis(List(span_1))
 
       Then("the appropriate span decorator plugin should be loaded using spi")
-      val records = readRecordsFromKafka(1, 5.seconds)
+      val records = readRecordsFromKafka(1, 10.seconds)
       records should not be empty
 
       val spans = records.map(Span.parseFrom)
