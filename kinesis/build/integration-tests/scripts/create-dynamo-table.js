@@ -3,8 +3,8 @@ var AWS = require('aws-sdk');
 var config = {
   "accessKeyId": "FAKE",
   "secretAccessKey": "FAKE",
-  "region": "FAKE",
-  "dynamoEndpoint": "http://dynamo:8000",
+  "region": "us-east-1",
+  "dynamoEndpoint": "http://localhost:4569",
   "tableName": "haystack-kinesis-proto-span-collector",
   "ShardCount": 1
 };
