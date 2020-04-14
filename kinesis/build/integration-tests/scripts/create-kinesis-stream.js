@@ -4,7 +4,7 @@ var config = {
   "accessKeyId": "FAKE",
   "secretAccessKey": "FAKE",
   "region": "us-east-1",
-  "kinesisEndpoint": "http://kinesis:4568",
+  "kinesisEndpoint": "http://localhost:4568",
   "kinesisPort": 4568,
   "StreamName": "haystack-proto-spans",
   "ShardCount": 1
