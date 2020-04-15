@@ -18,12 +18,17 @@ services:
         KAFKA_ZOOKEEPER_CONNECT: zk:2181
      volumes:
        - /var/run/docker.sock:/var/run/docker.sock
-   kinesis:
-     image: dlsniper/kinesalite
+   localstack:
+     image: localstack/localstack:0.11.0
      ports:
-       - "4567"
-   dynamo:
-     image: tray/dynamodb-local
-     ports:
-       - "8000"
-     command: "-sharedDb"
+      - '4563-4599:4563-4599'
+      - '8055:8080'
+     environment:
+      - SERVICES=kinesis,dynamodb
+      - KINESIS_SHARD_LIMIT=1
+      - KINESIS_LATENCY=0
+      - DATA_DIR=/tmp/localstack/data
+      - START_WEB=0
+     volumes:
+      - './.localstack:/tmp/localstack'
+      - '/var/run/docker.sock:/var/run/docker.sock'
