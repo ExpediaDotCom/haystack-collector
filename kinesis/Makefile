@@ -13,7 +13,7 @@ prepare_integration_test_env: docker_build
 	mkdir -p ${PWD}/plugins/decorators
 	cp ${PWD}/../sample-span-decorator/target/sample-span-decorator.jar ${PWD}/plugins/decorators/.
 
-	docker-compose -f build/integration-tests/docker-compose.yml -p sandbox up
+	docker-compose -f build/integration-tests/docker-compose.yml -p sandbox up -d
 
 	# kafka sometimes take time to start
 	sleep 30

@@ -4,7 +4,7 @@ var config = {
   "accessKeyId": "FAKE",
   "secretAccessKey": "FAKE",
   "region": "us-east-1",
-  "dynamoEndpoint": "http://localhost:4569",
+  "dynamoEndpoint": "http://localstack:4569",
   "tableName": "haystack-kinesis-proto-span-collector",
   "ShardCount": 1
 };
