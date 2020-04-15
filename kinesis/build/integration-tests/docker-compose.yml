@@ -19,7 +19,7 @@ services:
      volumes:
        - /var/run/docker.sock:/var/run/docker.sock
    localstack:
-     image: localstack/localstack
+     image: localstack/localstack:0.11.0
      ports:
       - '4563-4599:4563-4599'
       - '8055:8080'
@@ -27,10 +27,8 @@ services:
       - SERVICES=kinesis,dynamodb
       - KINESIS_SHARD_LIMIT=1
       - KINESIS_LATENCY=0
-      - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
-      - START_WEB=1
+      - START_WEB=0
      volumes:
       - './.localstack:/tmp/localstack'
       - '/var/run/docker.sock:/var/run/docker.sock'
-      - './docker-entrypoint-initaws.d:/docker-entrypoint-initaws.d'
