@@ -34,6 +34,7 @@ integration_test: prepare_integration_test_env
 		--network=sandbox_default \
 		-e "AWS_CBOR_DISABLE=1" \
 		-e "AWS_ACCESS_KEY=fake" \
+		-e "AWS_SECRET_KEY=fake" \
 		-v $(PWD)/..:/src \
 		-v ~/.m2:/root/.m2 \
 		-w /src \

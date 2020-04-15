@@ -110,7 +110,9 @@
                             <wildcardSuites>com.expedia.www.haystack.kinesis.span.collector.integration</wildcardSuites>
                             <environmentVariables>
                                 <HAYSTACK_OVERRIDES_CONFIG_PATH>/src/kinesis/build/integration-tests/app-integration-test.conf</HAYSTACK_OVERRIDES_CONFIG_PATH>
+                                <AWS_ACCESS_KEY>fake</AWS_ACCESS_KEY>
                                 <AWS_CBOR_DISABLE>1</AWS_CBOR_DISABLE>
+                                <AWS_SECRET_KEY>fake</AWS_SECRET_KEY>
                             </environmentVariables>
                         </configuration>
                     </execution>
