@@ -26,7 +26,7 @@
     <outputWriter class="org.jmxtrans.agent.GraphitePlainTextTcpOutputWriter">
         <host>${HAYSTACK_GRAPHITE_HOST:monitoring-influxdb-graphite.kube-system.svc}</host>
         <port>${HAYSTACK_GRAPHITE_PORT:2003}</port>
-        <namePrefix>haystack.collector.kinesis.#hostname#.</namePrefix>
+        <namePrefix>${HAYSTACK_GRAPHITE_PREFIX:haystack.collector.kinesis}.#hostname#.</namePrefix>
     </outputWriter>
     <collectIntervalInSeconds>60</collectIntervalInSeconds>
 </jmxtrans-agent>
