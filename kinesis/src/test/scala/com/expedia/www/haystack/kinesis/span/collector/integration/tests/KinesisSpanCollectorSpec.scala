@@ -20,9 +20,6 @@ package com.expedia.www.haystack.kinesis.span.collector.integration.tests
 import com.expedia.open.tracing.{Span, Tag}
 import com.expedia.www.haystack.kinesis.span.collector.config.ProjectConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.integration._
-import com.expedia.www.haystack.span.decorators.SpanDecorator
-import com.expedia.www.haystack.span.decorators.plugin.loader.SpanDecoratorPluginLoader
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 
@@ -125,9 +122,9 @@ class KinesisSpanCollectorSpec extends IntegrationTestSpec {
       records should not be empty
 
       val spans = records.map(Span.parseFrom)
-      spans.map(_.getTraceId).toSet should contain ("trace-id-1")
-      spans.map(_.getSpanId) should contain ("span-id-1")
-      spans(0).getTagsList should contain (Tag.newBuilder().setKey("X-HAYSTACK-PLUGIN-SPAN-DECORATOR").setVStr("SAMPLE-TAG").build())
+      spans.map(_.getTraceId).toSet should contain("trace-id-1")
+      spans.map(_.getSpanId) should contain("span-id-1")
+      spans(0).getTagsList should contain(Tag.newBuilder().setKey("X-HAYSTACK-PLUGIN-SPAN-DECORATOR").setVStr("SAMPLE-TAG").build())
     }
   }
 }

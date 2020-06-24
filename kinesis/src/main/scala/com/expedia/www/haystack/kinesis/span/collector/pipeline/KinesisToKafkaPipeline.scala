@@ -17,19 +17,15 @@
 
 package com.expedia.www.haystack.kinesis.span.collector.pipeline
 
-import java.util
-
 import com.expedia.www.haystack.collector.commons.config.{ExternalKafkaConfiguration, ExtractorConfiguration, KafkaProduceConfiguration}
 import com.expedia.www.haystack.collector.commons.sink.kafka.KafkaRecordSink
 import com.expedia.www.haystack.collector.commons.{MetricsSupport, ProtoSpanExtractor, SpanDecoratorFactory}
 import com.expedia.www.haystack.kinesis.span.collector.config.entities.KinesisConsumerConfiguration
 import com.expedia.www.haystack.kinesis.span.collector.kinesis.client.KinesisConsumer
-import com.expedia.www.haystack.span.decorators.plugin.loader.SpanDecoratorPluginLoader
-import com.expedia.www.haystack.span.decorators.plugin.config.{Plugin, PluginConfiguration}
-import com.expedia.www.haystack.span.decorators.{AdditionalTagsSpanDecorator, SpanDecorator}
+import com.expedia.www.haystack.span.decorators.SpanDecorator
+import com.expedia.www.haystack.span.decorators.plugin.config.Plugin
 import org.slf4j.LoggerFactory
 
-import scala.collection.JavaConverters._
 import scala.util.Try
 
 class KinesisToKafkaPipeline(kafkaProducerConfig: KafkaProduceConfiguration,
